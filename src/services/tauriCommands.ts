@@ -144,3 +144,45 @@ export async function cancelCapture(captureId: string): Promise<void> {
 export async function getCapture(id: string): Promise<Capture> {
   return invoke<Capture>('get_capture', { id })
 }
+
+// ============================================================================
+// Issue Commands
+// ============================================================================
+import { Issue, CreateIssuePayload, UpdateIssuePayload } from '@/types/issue'
+
+export async function saveCaptureAnnotations(
+  captureId: string,
+  issues: CreateIssuePayload[],
+  annotatedImageBase64?: string
+): Promise<void> {
+  return invoke<void>('save_capture_annotations', {
+    captureId,
+    capture_id: captureId,
+    issues,
+    annotatedImageBase64,
+    annotated_image_base64: annotatedImageBase64
+  })
+}
+
+export async function getIssues(sessionId: string): Promise<Issue[]> {
+  return invoke<Issue[]>('get_issues', { sessionId })
+}
+
+export async function getIssue(id: string): Promise<Issue> {
+  return invoke<Issue>('get_issue', { id })
+}
+
+export async function updateIssue(id: string, payload: UpdateIssuePayload): Promise<Issue> {
+  return invoke<Issue>('update_issue', { id, payload })
+}
+
+export async function deleteIssue(id: string): Promise<void> {
+  return invoke<void>('delete_issue', { id })
+}
+
+// ============================================================================
+// Export Commands
+// ============================================================================
+export async function exportSessionToHtml(sessionId: string, outputPath: string): Promise<void> {
+  return invoke<void>('export_session_to_html', { sessionId, outputPath })
+}

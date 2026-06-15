@@ -67,6 +67,12 @@ pub fn run() {
             commands::capture_cmds::cancel_capture,
             commands::capture_cmds::get_capture,
             commands::capture_cmds::log_from_js,
+            commands::issue_cmds::save_capture_annotations,
+            commands::issue_cmds::get_issues,
+            commands::issue_cmds::get_issue,
+            commands::issue_cmds::update_issue,
+            commands::issue_cmds::delete_issue,
+            commands::export_cmds::export_session_to_html,
         ])
         .setup(|app| {
             #[cfg(debug_assertions)]

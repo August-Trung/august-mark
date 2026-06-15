@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import type { Annotation } from '@/types/annotation'
+import { saveCaptureAnnotations } from '@/services/tauriCommands'
 
 export const useOverlayStore = defineStore('overlay', () => {
   const activeTool = ref<'marker' | 'rect' | 'arrow' | 'text' | null>(null)
@@ -49,6 +50,67 @@ export const useOverlayStore = defineStore('overlay', () => {
     showIssueForm.value = false
   }
 
+  async function saveAndClose(annotatedBase64?: string) {
+    if (!captureId.value) return
+
+    const payloads = annotations.value.map(ann => {
+      const issue = ann.issue || {
+        title: `Annotation #${ann.number}`,
+        issueType: 'Bug',
+        severity: 'Minor',
+        description: ''
+      }
+
+      // Calculate marker_x, marker_y centered around the point of interest
+      let markerX = 0
+      let markerY = 0
+      if (ann.type === 'marker') {
+        markerX = ann.position.x
+        markerY = ann.position.y
+      } else if (ann.type === 'rect') {
+        // Center crop on the middle of the rectangle
+        markerX = ann.topLeft.x + ann.width / 2
+        markerY = ann.topLeft.y + ann.height / 2
+      } else if (ann.type === 'arrow') {
+        // Center crop on the arrowhead (pointing target) instead of the tail
+        markerX = ann.end.x
+        markerY = ann.end.y
+      } else if (ann.type === 'text') {
+        // Center crop on the text block position
+        markerX = ann.position.x
+        markerY = ann.position.y
+      }
+
+      // Scale to physical coordinates matching the physical image size
+      const dpr = monitorInfo.value?.scaleFactor || window.devicePixelRatio || 1
+      const physicalX = markerX * dpr
+      const physicalY = markerY * dpr
+
+      return {
+        markerNumber: ann.number,
+        title: issue.title,
+        description: issue.description,
+        issueType: issue.issueType,
+        severity: issue.severity,
+        status: 'Open',
+        markerX: Math.round(physicalX),
+        markerY: Math.round(physicalY),
+        annotationData: JSON.stringify(ann),
+        color: ann.color || '#FF6B35',
+        strokeWidth: ann.strokeWidth || 2,
+        tags: []
+      }
+    });
+
+    try {
+      await saveCaptureAnnotations(captureId.value, payloads, annotatedBase64)
+      reset()
+    } catch (e) {
+      console.error('[OverlayStore] Failed to save annotations:', e)
+      throw e
+    }
+  }
+
   return {
     activeTool,
     annotations,
@@ -63,5 +125,6 @@ export const useOverlayStore = defineStore('overlay', () => {
     addAnnotation,
     removeAnnotation,
     reset,
+    saveAndClose,
   }
 })

@@ -32,21 +32,23 @@ defineEmits<{
 <style scoped>
 .overlay-status-bar {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 56px;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  height: 48px;
+  min-width: 500px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 24px;
-  background: rgba(26, 29, 39, 0.90);
+  padding: 0 16px;
+  background: rgba(26, 29, 39, 0.85);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 24px;
   color: #E8E8E8;
   z-index: 9999;
-  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 

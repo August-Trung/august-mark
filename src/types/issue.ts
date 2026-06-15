@@ -31,3 +31,27 @@ export interface Issue {
   updatedAt: string
   tags?: Tag[]
 }
+
+export interface CreateIssuePayload {
+  markerNumber: number
+  title: string
+  description: string
+  issueType: string
+  severity: string
+  status: string
+  markerX: number
+  markerY: number
+  annotationData: string // JSON string
+  color: string
+  strokeWidth: number
+  tags: string[]
+}
+
+export interface UpdateIssuePayload {
+  title?: string
+  description?: string
+  issueType?: string
+  severity?: string
+  status?: string
+  tags?: string[]
+}

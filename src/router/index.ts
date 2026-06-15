@@ -8,6 +8,16 @@ const routes = [
     component: DashboardView,
   },
   {
+    path: '/session/:id',
+    name: 'Session',
+    component: () => import('@/views/SessionView.vue'),
+  },
+  {
+    path: '/issue/:id',
+    name: 'Issue',
+    component: () => import('@/views/IssueView.vue'),
+  },
+  {
     path: '/about',
     name: 'About',
     component: () => import('@/views/AboutView.vue'),

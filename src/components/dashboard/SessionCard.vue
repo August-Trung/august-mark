@@ -44,6 +44,7 @@
         size="small"
         class="text-none"
         prepend-icon="mdi-eye"
+        @click="openSession"
       >
         Open
       </v-btn>
@@ -60,6 +61,11 @@
             @click="$emit('complete', session.id)"
           ></v-list-item>
           <v-list-item
+            prepend-icon="mdi-export"
+            title="Export Report"
+            @click="$emit('export', session)"
+          ></v-list-item>
+          <v-list-item
             prepend-icon="mdi-delete"
             title="Delete Session"
             class="text-error"
@@ -73,15 +79,23 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useRouter } from 'vue-router'
 import { Session } from '@/types/session'
 
 const props = defineProps<{
   session: Session
 }>()
 
+const router = useRouter()
+
+const openSession = () => {
+  router.push(`/session/${props.session.id}`)
+}
+
 defineEmits<{
   (e: 'delete', id: string): void
   (e: 'complete', id: string): void
+  (e: 'export', session: Session): void
 }>()
 
 const statusColor = computed(() => {

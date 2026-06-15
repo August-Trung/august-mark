@@ -100,6 +100,7 @@ const loadScreenshot = () => {
   if (!props.screenshotUrl) return
 
   screenshotImage = new Image()
+  screenshotImage.crossOrigin = 'anonymous'
   screenshotImage.src = props.screenshotUrl
   
   screenshotImage.onload = () => {

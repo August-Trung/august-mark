@@ -37,6 +37,7 @@
           :session="session"
           @delete="handleDelete"
           @complete="handleComplete"
+          @export="openExportDialog"
         />
       </v-col>
     </v-row>
@@ -88,16 +89,37 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+
+    <!-- Delete Session Confirmation Dialog -->
+    <ConfirmDialog
+      v-model="showDeleteDialog"
+      title="Delete Session"
+      message="Are you sure you want to delete this session? All screenshots and issues inside will be permanently deleted."
+      confirm-text="Delete"
+      confirm-color="error"
+      @confirm="executeDelete"
+    />
+
+    <!-- Export Session Report Dialog -->
+    <ExportDialog
+      v-model="showExportDialog"
+      :session-id="exportSessionId"
+      :session-title="exportSessionTitle"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted } from 'vue'
+import { ref, watch, onMounted, onUnmounted } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useProjectStore } from '@/stores/projectStore'
 import { useSessionStore } from '@/stores/sessionStore'
+import { listenToEvent } from '@/services/tauriEvents'
 import SessionCard from './SessionCard.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
+import ConfirmDialog from '@/components/common/ConfirmDialog.vue'
+import ExportDialog from '@/components/export/ExportDialog.vue'
+import type { Session } from '@/types/session'
 
 const projectStore = useProjectStore()
 const { activeProjectId } = storeToRefs(projectStore)
@@ -111,6 +133,9 @@ const isFormValid = ref(false)
 const sessionTitle = ref('')
 const sessionDesc = ref('')
 const isCreating = ref(false)
+
+const showDeleteDialog = ref(false)
+const sessionToDelete = ref<string | null>(null)
 
 // Expose openCreateDialog so dashboard parent can call it
 defineExpose({
@@ -126,9 +151,23 @@ watch(activeProjectId, (newId) => {
   }
 }, { immediate: true })
 
-onMounted(() => {
+let unlistenSessionUpdated: (() => void) | null = null
+
+onMounted(async () => {
   if (activeProjectId.value) {
     fetchSessionsByProject(activeProjectId.value)
+  }
+
+  unlistenSessionUpdated = await listenToEvent<string>('session-updated', (_sessionId) => {
+    if (activeProjectId.value) {
+      fetchSessionsByProject(activeProjectId.value)
+    }
+  })
+})
+
+onUnmounted(() => {
+  if (unlistenSessionUpdated) {
+    unlistenSessionUpdated()
   }
 })
 
@@ -155,13 +194,19 @@ async function handleCreate() {
   }
 }
 
-async function handleDelete(id: string) {
-  if (confirm('Are you sure you want to delete this session? All screenshots and issues inside will be permanently deleted.')) {
-    try {
-      await deleteSession(id)
-    } catch (err) {
-      console.error('Failed to delete session:', err)
-    }
+function handleDelete(id: string) {
+  sessionToDelete.value = id
+  showDeleteDialog.value = true
+}
+
+async function executeDelete() {
+  if (!sessionToDelete.value) return
+  try {
+    await deleteSession(sessionToDelete.value)
+  } catch (err) {
+    console.error('Failed to delete session:', err)
+  } finally {
+    sessionToDelete.value = null
   }
 }
 
@@ -171,6 +216,16 @@ async function handleComplete(id: string) {
   } catch (err) {
     console.error('Failed to complete session:', err)
   }
+}
+
+const showExportDialog = ref(false)
+const exportSessionId = ref('')
+const exportSessionTitle = ref('')
+
+function openExportDialog(session: Session) {
+  exportSessionId.value = session.id
+  exportSessionTitle.value = session.title
+  showExportDialog.value = true
 }
 </script>
 

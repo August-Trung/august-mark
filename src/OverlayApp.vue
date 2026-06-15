@@ -13,6 +13,7 @@
       <div class="screenshot-wrapper">
         <AnnotationCanvas
           v-if="screenshotUrl"
+          ref="annotationCanvasRef"
           :screenshot-url="screenshotUrl"
           @load="handleScreenshotLoad"
           @error="handleScreenshotError"
@@ -45,6 +46,7 @@ import { useOverlayStore } from '@/stores/overlayStore'
 import type { Capture } from '@/types/capture'
 
 const overlayStore = useOverlayStore()
+const annotationCanvasRef = ref<any>(null)
 
 const captureId = ref<string | null>(null)
 const capture = ref<Capture | null>(null)
@@ -139,7 +141,43 @@ const handleCancel = async () => {
 }
 
 const handleDone = async () => {
-  await closeOverlay()
+  try {
+    let annotatedBase64: string | undefined = undefined
+    if (annotationCanvasRef.value) {
+      let screenshotCanvas = annotationCanvasRef.value.screenshotCanvasRef
+      let markerCanvas = annotationCanvasRef.value.markerCanvasRef
+      
+      // Handle Vue Ref wrappers if they aren't auto-unwrapped
+      if (screenshotCanvas && typeof screenshotCanvas === 'object' && 'value' in screenshotCanvas) {
+        screenshotCanvas = screenshotCanvas.value
+      }
+      if (markerCanvas && typeof markerCanvas === 'object' && 'value' in markerCanvas) {
+        markerCanvas = markerCanvas.value
+      }
+
+      if (screenshotCanvas && markerCanvas) {
+        // Create a temporary canvas to merge them
+        const tempCanvas = document.createElement('canvas')
+        tempCanvas.width = screenshotCanvas.width
+        tempCanvas.height = screenshotCanvas.height
+        const tempCtx = tempCanvas.getContext('2d')
+        if (tempCtx) {
+          tempCtx.drawImage(screenshotCanvas, 0, 0)
+          tempCtx.drawImage(markerCanvas, 0, 0)
+          annotatedBase64 = tempCanvas.toDataURL('image/png')
+        }
+      } else {
+        console.warn('[OverlayApp] Canvases not found or not initialized:', {
+          screenshotCanvas: !!screenshotCanvas,
+          markerCanvas: !!markerCanvas
+        })
+      }
+    }
+
+    await overlayStore.saveAndClose(annotatedBase64)
+  } catch (e: any) {
+    console.error('[OverlayApp] Failed to save annotations:', e?.message || e, e?.stack || '')
+  }
 }
 
 onMounted(async () => {

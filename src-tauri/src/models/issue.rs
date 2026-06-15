@@ -21,11 +21,11 @@ pub struct Issue {
     pub issue_type: String,
     pub severity: String,
     pub status: String,
-    pub marker_x: i32,
-    pub marker_y: i32,
+    pub marker_x: f64,
+    pub marker_y: f64,
     pub annotation_data: String, // JSON string stored in SQLite text column
     pub color: String,
-    pub stroke_width: i32,
+    pub stroke_width: f64,
     pub crop_path: Option<String>,
     pub created_at: String,
     pub updated_at: String,
@@ -41,11 +41,11 @@ pub struct CreateIssuePayload {
     pub issue_type: String,
     pub severity: String,
     pub status: String,
-    pub marker_x: i32,
-    pub marker_y: i32,
+    pub marker_x: f64,
+    pub marker_y: f64,
     pub annotation_data: String, // JSON string
     pub color: String,
-    pub stroke_width: i32,
+    pub stroke_width: f64,
     pub tags: Vec<String>,       // List of tag names/IDs
 }
 
