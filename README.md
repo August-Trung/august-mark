@@ -2,103 +2,82 @@
 
 > **Tagline:** *Mark everything, review later.*
 
-**August Mark** là một ứng dụng desktop hỗ trợ review, chụp màn hình và vẽ ghi chú (markup/annotation) trực tiếp trên màn hình, giúp các nhà phát triển, nhà thiết kế, kiểm thử viên (QC/QA) và quản lý sản phẩm nhanh chóng ghi lại lỗi (bug), phản hồi (feedback) và xuất báo cáo tiện lợi.
-
-Dự án được xây dựng với mục tiêu hoạt động độc lập, gọn nhẹ, bảo mật dữ liệu cục bộ (offline-first) và giao diện tối giản, trực quan.
+**August Mark** là một ứng dụng desktop gọn nhẹ, bảo mật và mạnh mẽ dành cho các nhà phát triển, nhà thiết kế, kiểm thử viên (QA/QC) và quản lý sản phẩm. Ứng dụng giúp chụp ảnh màn hình nhanh, vẽ trực tiếp các ghi chú, mũi tên, số thứ tự lỗi và xuất báo cáo HTML tiện lợi để chia sẻ.
 
 ---
 
-## 🚀 Tính năng nổi bật (MVP v0.1)
+## 🚀 Tính năng nổi bật
 
-- **Quản lý Project & Session:** Tổ chức các phiên review theo từng dự án riêng biệt.
-- **Chụp ảnh & Đánh dấu (Markup) Màn hình:** Vẽ trực tiếp các khối chữ nhật, mũi tên, chữ ghi chú, số thứ tự lỗi lên màn hình.
-- **Cơ sở dữ liệu SQLite nội bộ:** Lưu trữ toàn bộ dữ liệu cục bộ bảo mật trên máy khách, không gửi dữ liệu qua API bên thứ ba.
-- **Xuất báo cáo HTML:** Đóng gói toàn bộ phiên làm việc thành một file HTML duy nhất tự chứa (chứa ảnh base64) để chia sẻ nhanh.
+- **Quản lý Dự án & Phiên làm việc (Project & Session):** Tổ chức các phiên review và chụp ảnh màn hình gọn gàng theo từng dự án riêng biệt.
+- **Chụp ảnh & Ghi chú Màn hình (Markup):**
+  - **Marker (Ghim số):** Đánh số thứ tự lỗi tăng dần tự động.
+  - **Rectangle (Hình chữ nhật):** Khoanh vùng khu vực có lỗi.
+  - **Arrow (Mũi tên):** Chỉ rõ tiêu điểm hoặc luồng thao tác lỗi.
+  - **Text (Văn bản):** Viết ghi chú trực tiếp lên ảnh.
+- **Báo cáo HTML Tự chứa (Self-contained):** Đóng gói toàn bộ phiên làm việc (bao gồm các ảnh chụp và thông tin chi tiết của lỗi) thành một file HTML duy nhất (sử dụng ảnh Base64) để dễ dàng gửi qua email, chat hoặc đính kèm vào Jira.
+- **Offline-First & Bảo mật:** Toàn bộ dữ liệu (cơ sở dữ liệu SQLite và tệp tin hình ảnh) được lưu trữ cục bộ 100% trên máy tính của bạn.
+
+---
+
+## ⌨️ Phím tắt & Thao tác nhanh
+
+### Kích hoạt chụp ảnh màn hình
+Để kích hoạt chế độ chụp và vẽ ghi chú từ bất kỳ ứng dụng nào khác:
+- **Phím tắt toàn cục:** Nhấn phím `PrintScreen`.
+- **Thao tác chuột:** Nhấn và giữ **nút cuộn chuột giữa** (Middle Click Hold) từ **1 giây** trở lên.
+
+### Trong giao diện vẽ ghi chú (Overlay Window)
+- **Phím `1`**: Chuyển sang công cụ **Marker (Ghim số)**.
+- **Phím `2`**: Chuyển sang công cụ **Rectangle (Hình chữ nhật)**.
+- **Phím `3`**: Chuyển sang công cụ **Arrow (Mũi tên)**.
+- **Phím `4`**: Chuyển sang công cụ **Text (Văn bản)**.
+- **Phím `Escape` (Esc)**: Hủy bỏ hình vẽ đang dở, đóng form nhập lỗi hoặc thoát chế độ Overlay.
 
 ---
 
 ## 🛠️ Công nghệ sử dụng
 
-- **Khung ứng dụng:** [Tauri 2](https://tauri.app/) (Rust backend)
-- **Giao diện (Frontend):** [Vue 3](https://vuejs.org/) + [Vuetify 3](https://vuetifyjs.com/) (Material Design) + [TypeScript](https://www.typescriptlang.org/)
-- **Quản lý trạng thái:** [Pinia](https://pinia.vuejs.org/)
-- **Hệ cơ sở dữ liệu:** [SQLite](https://www.sqlite.org/) (Sử dụng `rusqlite` đóng gói kèm ứng dụng)
+- **Rust / Tauri 2:** Xử lý chụp ảnh đa màn hình, lắng nghe phím tắt toàn cục và tương tác cơ sở dữ liệu SQLite.
+- **Vue 3 / Vuetify 3 / TypeScript:** Giao diện điều khiển mượt mà, tối giản với bảng màu Dark Mode hiện đại.
+- **SQLite:** Lưu trữ dữ liệu cục bộ an toàn, hiệu năng cao.
 
 ---
 
-## 📁 Tiến trình Phát triển theo các Tuần
+## 📦 Hướng dẫn cài đặt
 
-### 📅 Tuần 1 - Cấu trúc nền tảng (Foundation)
-Tuần 1 tập trung vào xây dựng bộ khung ứng dụng chạy ổn định và thiết lập hệ thống lưu trữ cục bộ:
-- **T1.01 -> T1.02:** Khởi tạo cấu trúc dự án Tauri 2, Vue 3, TypeScript, và tích hợp bộ giao diện Vuetify 3 (Theme tối màu chủ đạo `#0F1117`, màu cam thương hiệu `#FF6B35`).
-- **T1.03:** Định nghĩa đầy đủ các kiểu dữ liệu TypeScript dùng chung (Project, Session, Capture, Issue, Annotation, Point).
-- **T1.04:** Định nghĩa hệ thống bắt lỗi trong Rust (`AppError`) hỗ trợ tuần tự hóa qua Tauri IPC và các tiện ích sinh ID, định vị thư mục.
-- **T1.05:** Khai báo cấu trúc thực thể (Rust structs) và Payload trao đổi dữ liệu tương thích với frontend.
-- **T1.06:** Thiết kế lược đồ cơ sở dữ liệu SQLite v001 hỗ trợ ràng buộc khóa ngoại (Foreign Keys) tự động cascade xóa dữ liệu con và quản lý migrations chạy tự động khi khởi động.
-- **T1.07:** Khởi tạo AppState toàn cục quản lý kết nối cơ sở dữ liệu luồng an toàn (`Mutex<Connection>`).
-- **T1.08 -> T1.09:** Xây dựng Project repository (CRUD) ở Rust và Tauri IPC Bridge ở frontend.
-- **T1.10:** Phát triển giao diện Sidebar chọn dự án (`ProjectSelector`) và thanh điều hướng.
-- **T1.11 -> T1.12:** Xây dựng Session repository (CRUD) ở Rust, tạo Pinia store và thiết kế danh sách phiên làm việc (`SessionList`, `SessionCard`).
-- **T1.13:** Hoàn thiện bố cục trang chính (Dashboard Layout) kết hợp Header (`AppHeader`) hiển thị phím tắt và màn hình trống (`EmptyState`).
-
-### 📅 Tuần 2 - Chụp màn hình & Cửa sổ vẽ (Screen Capture & Overlay)
-Tuần 2 phát triển động cơ chụp màn hình đa màn hình và xử lý hiển thị cửa sổ vẽ:
-- **Chụp màn hình hoạt động:** Sử dụng thư viện `xcap` trong Rust để nhận dạng màn hình chứa con trỏ chuột, chụp ảnh tĩnh độ phân giải cao và ghi lại thông tin tiêu đề cửa sổ đang active.
-- **Phím tắt toàn cục:** Lắng nghe phím tắt `PrintScreen` hoặc `Middle Click` để kích hoạt chế độ chụp màn hình từ bất kỳ ứng dụng nào khác ngoài August Mark.
-- **Cửa sổ vẽ trong suốt (Overlay):** Xây dựng cửa sổ tauri thứ hai full màn hình, trong suốt và không viền hiển thị tấm hình chụp được để sẵn sàng làm nền cho việc vẽ ký hiệu.
-
-### 📅 Tuần 3 - Công cụ vẽ & Form phản hồi (Drawing Tools & Issue Form)
-Tuần 3 phát triển các công cụ tương tác vẽ ghi chú trong chế độ Overlay:
-- **Bộ công cụ vẽ HTML5 Canvas:** Cho phép người dùng vẽ 4 loại ghi chú trực quan:
-  - **Marker**: Ghim số thứ tự lỗi tăng dần.
-  - **Rect**: Đánh dấu vùng vuông khoanh tròn lỗi.
-  - **Arrow**: Mũi tên chỉ rõ tiêu điểm lỗi.
-  - **Text**: Bubble điền văn bản ghi chú nhanh.
-- **Form phản hồi (Issue Form):** Mỗi khi vẽ xong một ký hiệu, một form trượt từ bên phải xuất hiện cho phép nhập tiêu đề lỗi, loại lỗi (Bug, Feature, Task, Question), độ nghiêm trọng (Minor, Major, Critical) và mô tả bổ sung.
-
-### 📅 Tuần 4 - Cơ sở dữ liệu Issue, Đồng bộ & Xuất báo cáo (Save, Sync & Export)
-Tuần 4 hoàn thiện tính năng lưu trữ, xử lý ảnh nâng cao và xuất báo cáo:
-- **Lưu trữ ảnh & Tạo crops**:
-  - Giao tiếp với backend để lưu trữ các thông tin annotations và ghi nhận issues vào SQLite.
-  - Cắt ảnh thumbnail 400x400 tự động tập trung vào các điểm lỗi quan trọng (tâm hình chữ nhật, đầu mũi tên trỏ tới, ký tự text).
-  - Tránh lỗi lệch tọa độ khi vẽ trên màn hình có Display Scale Factor cao (High-DPI / Retina).
-- **Tránh Canvas Tainting (Midnight & CORS Fixes)**:
-  - Ghép lớp nền screenshot và lớp vẽ canvas ở phía client để xuất ảnh `.toDataURL()` sạch sẽ, giữ nguyên toàn bộ văn bản và ký tự được gõ.
-  - Sửa lỗi mismatch đường dẫn ảnh sau khi đổi ngày ở ranh giới nửa đêm.
-- **Đồng bộ thời gian thực (Auto-Refresh)**: Sử dụng cơ chế phát sự kiện toàn cục Tauri `session-updated` từ Rust để cập nhật tức thì dữ liệu đếm ảnh, số lỗi và load danh sách trên trang Dashboard và Session View ngay khi tắt Overlay vẽ.
-- **Đóng gói báo cáo HTML**: Xuất báo cáo HTML tĩnh tự động nhúng toàn bộ ảnh dưới dạng Base64 data URIs để chia sẻ nhanh chỉ với một file offline duy nhất.
+Bạn chỉ cần tải xuống bộ cài đặt của August Mark tại mục **Releases** trên GitHub:
+- **Bộ cài đặt `.msi`:** Dành cho Windows (tự động cấu hình và tích hợp hệ thống).
+- **Bộ cài đặt NSIS (`.exe`):** Cài đặt nhanh và gọn nhẹ.
 
 ---
 
-## 💻 Hướng dẫn chạy thử nghiệm
+## 💻 Hướng dẫn chạy thử nghiệm & Phát triển (Dành cho Lập trình viên)
 
-### 1. Yêu cầu hệ thống trước khi cài đặt
+### Yêu cầu hệ thống
 - **Node.js** (Phiên bản v20 trở lên)
 - **Rust Toolchain** (Cài đặt thông qua [rustup](https://rustup.rs/))
-- **Visual Studio Build Tools** (Chọn C++ build tools trên hệ điều hành Windows)
+- **Visual Studio Build Tools** (Cài đặt C++ build tools trên Windows)
 
-### 2. Cài đặt các gói phụ thuộc
+### 1. Cài đặt các gói phụ thuộc
 ```bash
-# Cài đặt thư viện frontend
 npm install
 ```
 
-### 3. Khởi động môi trường phát triển (Development)
-Chạy lệnh sau để khởi chạy máy chủ hot-reload Vite và biên dịch chương trình Tauri chạy trên cửa sổ máy tính:
+### 2. Khởi động chế độ phát triển
+Chạy lệnh sau để khởi chạy máy chủ hot-reload frontend và biên dịch ứng dụng Tauri:
 ```bash
 npm run tauri dev
 ```
 
-### 4. Đóng gói ứng dụng (Production Build)
+### 3. Đóng gói ứng dụng (Production Build)
 ```bash
 npm run tauri build
 ```
-File thực thi cài đặt (`.msi` hoặc `.exe` trên Windows) sẽ được đóng gói tại đường dẫn `src-tauri/target/release/bundle/`.
+Bộ cài đặt sau khi đóng gói thành công sẽ nằm ở thư mục: `src-tauri/target/release/bundle/`.
 
 ---
 
-## 🤝 Liên hệ & Phát triển
+## 🤝 Liên hệ & Đóng góp ý kiến
 
-Dự án được phát triển bởi **August Trung**. Mọi ý kiến phản hồi xin vui lòng tạo Issue trên kho mã nguồn Github này.
+Dự án được thiết kế và phát triển bởi **August Trung**. Mọi ý kiến đóng góp, phản hồi hoặc báo lỗi vui lòng tạo **Issue** hoặc gửi pull request trên kho lưu trữ mã nguồn này.
 
-*Tagline: Mark everything, review later.*
