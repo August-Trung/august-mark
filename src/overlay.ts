@@ -1,7 +1,11 @@
 import { createApp } from 'vue'
 import OverlayApp from './OverlayApp.vue'
-// NOTE: Overlay intentionally does NOT use Vuetify or its global styles
-// to keep the window fully transparent without any background overrides.
+import vuetify from './plugins/vuetify'
+import pinia from './plugins/pinia'
 
 const app = createApp(OverlayApp)
+
+app.use(pinia)
+app.use(vuetify)
+
 app.mount('#app')

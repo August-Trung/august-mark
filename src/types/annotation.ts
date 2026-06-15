@@ -10,12 +10,18 @@ export interface BaseAnnotation {
   type: AnnotationType
   color: string
   strokeWidth: number
+  number: number
+  issue?: {
+    title: string
+    issueType: string
+    severity: string
+    description: string
+  }
 }
 
 export interface MarkerAnnotation extends BaseAnnotation {
   type: 'marker'
   position: Point
-  number: number
 }
 
 export interface RectAnnotation extends BaseAnnotation {

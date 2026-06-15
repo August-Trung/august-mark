@@ -1,0 +1,191 @@
+<template>
+  <v-navigation-drawer
+    v-slot:default
+    v-model="showIssueForm"
+    location="right"
+    temporary
+    persistent
+    scrim="false"
+    :width="340"
+    class="issue-form-panel"
+  >
+    <div class="panel-header">
+      <h3 class="text-h6 font-weight-bold">
+        Issue Annotation #{{ nextMarkerNumber }}
+      </h3>
+      <v-chip size="small" color="primary" variant="flat">
+        {{ activeToolLabel }}
+      </v-chip>
+    </div>
+
+    <v-divider></v-divider>
+
+    <v-form ref="formRef" v-slot:default v-model="isFormValid" class="panel-body" @submit.prevent="handleSave">
+      <!-- Title -->
+      <v-text-field
+        v-model="title"
+        label="Title"
+        placeholder="Brief description of the issue"
+        variant="outlined"
+        density="comfortable"
+        :rules="[v => !!v || 'Title is required']"
+        required
+      ></v-text-field>
+
+      <!-- Type -->
+      <v-select
+        v-model="issueType"
+        label="Type"
+        :items="issueTypes"
+        variant="outlined"
+        density="comfortable"
+      ></v-select>
+
+      <!-- Severity -->
+      <v-select
+        v-model="severity"
+        label="Severity"
+        :items="severities"
+        variant="outlined"
+        density="comfortable"
+      ></v-select>
+
+      <!-- Description -->
+      <v-textarea
+        v-model="description"
+        label="Description (optional)"
+        placeholder="Provide more context or steps to reproduce..."
+        variant="outlined"
+        density="comfortable"
+        rows="4"
+        max-rows="6"
+        auto-grow
+      ></v-textarea>
+    </v-form>
+
+    <div class="panel-footer">
+      <v-btn
+        color="secondary"
+        variant="outlined"
+        class="flex-grow-1"
+        @click="handleCancel"
+      >
+        Cancel
+      </v-btn>
+      <v-btn
+        color="primary"
+        variant="flat"
+        class="flex-grow-1"
+        :disabled="!isFormValid"
+        @click="handleSave"
+      >
+        Save
+      </v-btn>
+    </div>
+  </v-navigation-drawer>
+</template>
+
+<script setup lang="ts">
+import { ref, computed, watch } from 'vue'
+import { useOverlayStore } from '@/stores/overlayStore'
+
+const overlayStore = useOverlayStore()
+
+const showIssueForm = computed({
+  get: () => overlayStore.showIssueForm,
+  set: (val) => {
+    overlayStore.showIssueForm = val
+  }
+})
+
+const nextMarkerNumber = computed(() => overlayStore.nextMarkerNumber)
+const activeToolLabel = computed(() => {
+  const tool = overlayStore.pendingAnnotation?.type || overlayStore.activeTool
+  if (!tool) return 'Annotation'
+  return tool.charAt(0).toUpperCase() + tool.slice(1)
+})
+
+const isFormValid = ref(false)
+const formRef = ref<any>(null)
+
+// Form Fields
+const title = ref('')
+const issueType = ref('Bug')
+const severity = ref('Minor')
+const description = ref('')
+
+const issueTypes = ['Bug', 'UI', 'UX', 'Suggestion', 'Requirement', 'Question']
+const severities = ['Critical', 'Major', 'Minor', 'Info']
+
+// Reset form values when the drawer is opened
+watch(() => overlayStore.showIssueForm, (visible) => {
+  if (visible) {
+    title.value = ''
+    issueType.value = 'Bug'
+    severity.value = 'Minor'
+    description.value = ''
+    if (formRef.value) {
+      formRef.value.resetValidation()
+    }
+  }
+})
+
+const handleSave = () => {
+  if (formRef.value && !isFormValid.value) return
+
+  if (overlayStore.pendingAnnotation) {
+    // Attach issue metadata to the annotation
+    overlayStore.pendingAnnotation.issue = {
+      title: title.value,
+      issueType: issueType.value,
+      severity: severity.value,
+      description: description.value
+    }
+    
+    // Commit the annotation
+    overlayStore.addAnnotation(overlayStore.pendingAnnotation)
+  }
+
+  // Clear states
+  overlayStore.pendingAnnotation = null
+  overlayStore.showIssueForm = false
+}
+
+const handleCancel = () => {
+  // Discard pending annotation
+  overlayStore.pendingAnnotation = null
+  overlayStore.showIssueForm = false
+}
+</script>
+
+<style scoped>
+.issue-form-panel {
+  background: #1a1d27 !important; /* Matches surface color from theme */
+  border-left: 1px solid rgba(255, 255, 255, 0.12) !important;
+  color: #e8e8e8 !important;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+.panel-header {
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.panel-body {
+  flex-grow: 1;
+  padding: 20px 16px;
+  overflow-y: auto;
+}
+
+.panel-footer {
+  padding: 16px;
+  display: flex;
+  gap: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  background: #151821;
+}
+</style>

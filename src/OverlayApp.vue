@@ -1,44 +1,56 @@
 <template>
-  <div class="overlay-root">
-    <!-- Status bar — always visible so user knows they can press Esc -->
-    <OverlayStatusBar
-      :session-name="sessionName"
-      :issue-count="issueCount"
-      @cancel="handleCancel"
-      @done="handleDone"
-    />
-
-    <!-- Fullscreen screenshot -->
-    <div class="screenshot-wrapper">
-      <img
-        v-if="screenshotUrl"
-        :src="screenshotUrl"
-        class="screenshot-img"
-        alt="Screenshot"
-        @load="handleScreenshotLoad"
-        @error="handleScreenshotError"
+  <v-app class="overlay-app-wrapper">
+    <div class="overlay-root">
+      <!-- Status bar — always visible so user knows they can press Esc -->
+      <OverlayStatusBar
+        :session-name="sessionName"
+        :issue-count="issueCount"
+        @cancel="handleCancel"
+        @done="handleDone"
       />
-      <!-- Loading placeholder while screenshot loads -->
-      <div v-else class="loading-placeholder">
-        <span>{{ loadError || 'Loading screenshot...' }}</span>
+
+      <!-- Fullscreen screenshot and drawing canvas -->
+      <div class="screenshot-wrapper">
+        <AnnotationCanvas
+          v-if="screenshotUrl"
+          :screenshot-url="screenshotUrl"
+          @load="handleScreenshotLoad"
+          @error="handleScreenshotError"
+        />
+        <!-- Loading placeholder while screenshot loads -->
+        <div v-else class="loading-placeholder">
+          <span>{{ loadError || 'Loading screenshot...' }}</span>
+        </div>
       </div>
+
+      <!-- Bottom floating toolbar -->
+      <AnnotationToolbar />
+
+      <!-- Right side slide-in issue form -->
+      <IssueFormPanel />
     </div>
-  </div>
+  </v-app>
 </template>
 
 <script setup lang="ts">
-import { nextTick, ref, onMounted, onUnmounted } from 'vue'
+import { nextTick, ref, onMounted, onUnmounted, computed } from 'vue'
 import { convertFileSrc } from '@tauri-apps/api/core'
 import { listenToEvent } from '@/services/tauriEvents'
 import { getCapture, getSession, cancelCapture, closeOverlay, showOverlay } from '@/services/tauriCommands'
 import OverlayStatusBar from '@/components/overlay/OverlayStatusBar.vue'
+import AnnotationCanvas from '@/components/overlay/AnnotationCanvas.vue'
+import AnnotationToolbar from '@/components/overlay/AnnotationToolbar.vue'
+import IssueFormPanel from '@/components/overlay/IssueFormPanel.vue'
+import { useOverlayStore } from '@/stores/overlayStore'
 import type { Capture } from '@/types/capture'
+
+const overlayStore = useOverlayStore()
 
 const captureId = ref<string | null>(null)
 const capture = ref<Capture | null>(null)
 const screenshotUrl = ref<string>('')
 const sessionName = ref<string>('Quick Review')
-const issueCount = ref<number>(0)
+const issueCount = computed(() => overlayStore.annotations.length)
 const loadError = ref<string | null>(null)
 
 let unlistenInit: (() => void) | null = null
@@ -74,6 +86,8 @@ const loadCaptureDetails = async (id: string) => {
     const data = await getCapture(id)
     capture.value = data
 
+    overlayStore.init(id, data.screenshotPath, data)
+
     // Convert to Tauri asset:// URL for local file access
     screenshotUrl.value = convertFileSrc(data.screenshotPath)
     scheduleRevealFallback()
@@ -95,6 +109,7 @@ const loadCaptureDetails = async (id: string) => {
 const loadCaptureFromUrl = async (id: string, path: string) => {
   captureId.value = id
   loadError.value = null
+  overlayStore.init(id, path)
   screenshotUrl.value = convertFileSrc(path)
   scheduleRevealFallback()
 }
@@ -162,13 +177,13 @@ onUnmounted(() => {
   if (unlistenInit) unlistenInit()
   if (revealFallbackTimer) window.clearTimeout(revealFallbackTimer)
   window.removeEventListener('keydown', handleKeyDown)
+  overlayStore.reset()
 })
 </script>
 
 <style>
 /*
-  CRITICAL: Full transparent reset — Vuetify is NOT loaded in this window.
-  These rules override all browser defaults to keep the window see-through.
+  CRITICAL: Full transparent reset — Vuetify overrides to keep window transparent.
 */
 *, *::before, *::after {
   box-sizing: border-box;
@@ -202,6 +217,17 @@ body {
   background: transparent !important;
   background-color: transparent !important;
 }
+
+.v-application {
+  background: transparent !important;
+  background-color: transparent !important;
+}
+
+.v-application__wrap {
+  background: transparent !important;
+  background-color: transparent !important;
+  min-height: 100vh !important;
+}
 </style>
 
 <style scoped>
@@ -226,13 +252,6 @@ body {
   height: 100%;
   z-index: 1;
   background: transparent;
-}
-
-.screenshot-img {
-  width: 100%;
-  height: 100%;
-  object-fit: fill;
-  display: block;
 }
 
 .loading-placeholder {
