@@ -21,6 +21,7 @@ CREATE TABLE projects (
     description TEXT DEFAULT '',
     color       TEXT DEFAULT '#FF6B35',        -- Hex color for UI
     is_archived INTEGER NOT NULL DEFAULT 0,    -- 0 = active, 1 = archived
+    is_deleted  INTEGER NOT NULL DEFAULT 0,    -- 0 = active, 1 = deleted
     created_at  TEXT NOT NULL DEFAULT (datetime('now')),
     updated_at  TEXT NOT NULL DEFAULT (datetime('now'))
 );
@@ -38,6 +39,7 @@ CREATE TABLE sessions (
     title       TEXT NOT NULL,
     description TEXT DEFAULT '',
     status      TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'completed', 'archived')),
+    is_deleted  INTEGER NOT NULL DEFAULT 0,    -- 0 = active, 1 = deleted
     created_at  TEXT NOT NULL DEFAULT (datetime('now')),
     updated_at  TEXT NOT NULL DEFAULT (datetime('now')),
     completed_at TEXT                          -- When session was ended
@@ -61,6 +63,7 @@ CREATE TABLE captures (
     monitor_height  INTEGER,
     scale_factor    REAL DEFAULT 1.0,
     window_title    TEXT,                      -- Foreground window title at capture time
+    is_deleted      INTEGER NOT NULL DEFAULT 0,    -- 0 = active, 1 = deleted
     created_at      TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
@@ -100,6 +103,7 @@ CREATE TABLE issues (
     -- Crop image
     crop_path       TEXT,                      -- Relative path, NULL if not yet generated
 
+    is_deleted      INTEGER NOT NULL DEFAULT 0,    -- 0 = active, 1 = deleted
     created_at      TEXT NOT NULL DEFAULT (datetime('now')),
     updated_at      TEXT NOT NULL DEFAULT (datetime('now'))
 );
@@ -148,3 +152,31 @@ INSERT INTO settings (key, value) VALUES
     ('default_project_id', '"default"'),
     ('auto_backup', 'false'),
     ('gdrive_connected', 'false');
+
+-- ============================================================
+-- Triggers for cascading soft deletes (is_deleted = 1)
+-- ============================================================
+CREATE TRIGGER IF NOT EXISTS trg_soft_delete_project
+AFTER UPDATE OF is_deleted ON projects
+FOR EACH ROW
+WHEN NEW.is_deleted = 1
+BEGIN
+    UPDATE sessions SET is_deleted = 1 WHERE project_id = OLD.id;
+END;
+
+CREATE TRIGGER IF NOT EXISTS trg_soft_delete_session
+AFTER UPDATE OF is_deleted ON sessions
+FOR EACH ROW
+WHEN NEW.is_deleted = 1
+BEGIN
+    UPDATE captures SET is_deleted = 1 WHERE session_id = OLD.id;
+END;
+
+CREATE TRIGGER IF NOT EXISTS trg_soft_delete_capture
+AFTER UPDATE OF is_deleted ON captures
+FOR EACH ROW
+WHEN NEW.is_deleted = 1
+BEGIN
+    UPDATE issues SET is_deleted = 1 WHERE capture_id = OLD.id;
+END;
+

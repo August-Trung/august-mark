@@ -11,6 +11,10 @@
 
 <script setup lang="ts">
 import AppSidebar from '@/components/common/AppSidebar.vue'
+import { useTauriEvents } from '@/composables/useTauriEvents'
+
+// Initialize Tauri event listeners globally for the main window
+useTauriEvents()
 </script>
 
 <style>

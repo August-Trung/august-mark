@@ -1,16 +1,16 @@
-use rusqlite::{params, Connection};
-use chrono::Utc;
 use crate::error::{AppError, AppResult};
-use crate::models::{Session, CreateSessionPayload, UpdateSessionPayload};
+use crate::models::{CreateSessionPayload, Session, UpdateSessionPayload};
 use crate::utils::id::new_uuid;
+use chrono::Utc;
+use rusqlite::{params, Connection};
 
 /// Query a single session by its ID.
 pub fn get_session(conn: &Connection, id: &str) -> AppResult<Session> {
     conn.query_row(
         "SELECT id, project_id, title, description, status, created_at, updated_at, completed_at,
-                (SELECT COUNT(*) FROM issues WHERE session_id = id) as issue_count,
-                (SELECT COUNT(*) FROM captures WHERE session_id = id) as capture_count
-         FROM sessions WHERE id = ?1",
+                (SELECT COUNT(*) FROM issues WHERE session_id = sessions.id AND is_deleted = 0) as issue_count,
+                (SELECT COUNT(*) FROM captures WHERE session_id = sessions.id AND is_deleted = 0) as capture_count
+         FROM sessions WHERE id = ?1 AND is_deleted = 0",
         params![id],
         |row| {
             Ok(Session {
@@ -40,30 +40,34 @@ pub fn get_session(conn: &Connection, id: &str) -> AppResult<Session> {
 pub fn get_sessions(conn: &Connection) -> AppResult<Vec<Session>> {
     let mut stmt = conn.prepare(
         "SELECT id, project_id, title, description, status, created_at, updated_at, completed_at,
-                (SELECT COUNT(*) FROM issues WHERE session_id = id) as issue_count,
-                (SELECT COUNT(*) FROM captures WHERE session_id = id) as capture_count
+                (SELECT COUNT(*) FROM issues WHERE session_id = sessions.id AND is_deleted = 0) as issue_count,
+                (SELECT COUNT(*) FROM captures WHERE session_id = sessions.id AND is_deleted = 0) as capture_count
          FROM sessions
+         WHERE is_deleted = 0
          ORDER BY created_at DESC"
     ).map_err(|e| AppError::Database(format!("Failed to prepare get_sessions statement: {}", e)))?;
 
-    let session_iter = stmt.query_map([], |row| {
-        Ok(Session {
-            id: row.get(0)?,
-            project_id: row.get(1)?,
-            title: row.get(2)?,
-            description: row.get(3)?,
-            status: row.get(4)?,
-            created_at: row.get(5)?,
-            updated_at: row.get(6)?,
-            completed_at: row.get(7)?,
-            issue_count: row.get(8)?,
-            capture_count: row.get(9)?,
+    let session_iter = stmt
+        .query_map([], |row| {
+            Ok(Session {
+                id: row.get(0)?,
+                project_id: row.get(1)?,
+                title: row.get(2)?,
+                description: row.get(3)?,
+                status: row.get(4)?,
+                created_at: row.get(5)?,
+                updated_at: row.get(6)?,
+                completed_at: row.get(7)?,
+                issue_count: row.get(8)?,
+                capture_count: row.get(9)?,
+            })
         })
-    }).map_err(|e| AppError::Database(format!("Failed to query sessions list: {}", e)))?;
+        .map_err(|e| AppError::Database(format!("Failed to query sessions list: {}", e)))?;
 
     let mut sessions = Vec::new();
     for s in session_iter {
-        sessions.push(s.map_err(|e| AppError::Database(format!("Failed to map session row: {}", e)))?);
+        sessions
+            .push(s.map_err(|e| AppError::Database(format!("Failed to map session row: {}", e)))?);
     }
     Ok(sessions)
 }
@@ -72,31 +76,34 @@ pub fn get_sessions(conn: &Connection) -> AppResult<Vec<Session>> {
 pub fn get_sessions_by_project(conn: &Connection, project_id: &str) -> AppResult<Vec<Session>> {
     let mut stmt = conn.prepare(
         "SELECT id, project_id, title, description, status, created_at, updated_at, completed_at,
-                (SELECT COUNT(*) FROM issues WHERE session_id = id) as issue_count,
-                (SELECT COUNT(*) FROM captures WHERE session_id = id) as capture_count
+                (SELECT COUNT(*) FROM issues WHERE session_id = sessions.id AND is_deleted = 0) as issue_count,
+                (SELECT COUNT(*) FROM captures WHERE session_id = sessions.id AND is_deleted = 0) as capture_count
          FROM sessions
-         WHERE project_id = ?1
+         WHERE project_id = ?1 AND is_deleted = 0
          ORDER BY created_at DESC"
     ).map_err(|e| AppError::Database(format!("Failed to prepare get_sessions_by_project statement: {}", e)))?;
 
-    let session_iter = stmt.query_map(params![project_id], |row| {
-        Ok(Session {
-            id: row.get(0)?,
-            project_id: row.get(1)?,
-            title: row.get(2)?,
-            description: row.get(3)?,
-            status: row.get(4)?,
-            created_at: row.get(5)?,
-            updated_at: row.get(6)?,
-            completed_at: row.get(7)?,
-            issue_count: row.get(8)?,
-            capture_count: row.get(9)?,
+    let session_iter = stmt
+        .query_map(params![project_id], |row| {
+            Ok(Session {
+                id: row.get(0)?,
+                project_id: row.get(1)?,
+                title: row.get(2)?,
+                description: row.get(3)?,
+                status: row.get(4)?,
+                created_at: row.get(5)?,
+                updated_at: row.get(6)?,
+                completed_at: row.get(7)?,
+                issue_count: row.get(8)?,
+                capture_count: row.get(9)?,
+            })
         })
-    }).map_err(|e| AppError::Database(format!("Failed to query sessions by project: {}", e)))?;
+        .map_err(|e| AppError::Database(format!("Failed to query sessions by project: {}", e)))?;
 
     let mut sessions = Vec::new();
     for s in session_iter {
-        sessions.push(s.map_err(|e| AppError::Database(format!("Failed to map session row: {}", e)))?);
+        sessions
+            .push(s.map_err(|e| AppError::Database(format!("Failed to map session row: {}", e)))?);
     }
     Ok(sessions)
 }
@@ -120,7 +127,11 @@ pub fn create_session(conn: &Connection, payload: CreateSessionPayload) -> AppRe
 }
 
 /// Update an existing session.
-pub fn update_session(conn: &Connection, id: &str, payload: UpdateSessionPayload) -> AppResult<Session> {
+pub fn update_session(
+    conn: &Connection,
+    id: &str,
+    payload: UpdateSessionPayload,
+) -> AppResult<Session> {
     let existing = get_session(conn, id)?;
     let now = Utc::now().to_rfc3339();
 
@@ -168,15 +179,19 @@ pub fn update_session(conn: &Connection, id: &str, payload: UpdateSessionPayload
 
     let refs: Vec<&dyn rusqlite::ToSql> = params_vec.iter().map(|b| b.as_ref()).collect();
 
-    conn.execute(&query, refs.as_slice())
-        .map_err(|e| AppError::Database(format!("Failed to execute update session query: {}", e)))?;
+    conn.execute(&query, refs.as_slice()).map_err(|e| {
+        AppError::Database(format!("Failed to execute update session query: {}", e))
+    })?;
 
     get_session(conn, id)
 }
 
 /// Delete a session. Downstream records will be cascade deleted.
 pub fn delete_session(conn: &Connection, id: &str) -> AppResult<()> {
-    conn.execute("DELETE FROM sessions WHERE id = ?1", params![id])
-        .map_err(|e| AppError::Database(format!("Failed to delete session: {}", e)))?;
+    conn.execute(
+        "UPDATE sessions SET is_deleted = 1 WHERE id = ?1",
+        params![id],
+    )
+    .map_err(|e| AppError::Database(format!("Failed to soft delete session: {}", e)))?;
     Ok(())
 }

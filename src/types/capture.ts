@@ -3,6 +3,8 @@ export interface Capture {
   sessionId: string
   screenshotPath: string
   monitorName: string
+  monitorX: number
+  monitorY: number
   monitorWidth: number
   monitorHeight: number
   scaleFactor: number

@@ -1,6 +1,7 @@
 import { invoke } from '@tauri-apps/api/core'
 import { Project, CreateProjectPayload, UpdateProjectPayload } from '@/types/project'
 import { Session, CreateSessionPayload, UpdateSessionPayload } from '@/types/session'
+import { Capture } from '@/types/capture'
 
 /**
  * Tauri IPC command wrappers for August Mark.
@@ -90,4 +91,56 @@ export async function updateSession(id: string, payload: UpdateSessionPayload): 
  */
 export async function deleteSession(id: string): Promise<void> {
   return invoke<void>('delete_session', { id })
+}
+
+// ============================================================================
+// Capture Commands
+// ============================================================================
+
+export interface CaptureResult {
+  captureId: string
+  screenshotPath: string
+  monitorInfo: any
+}
+
+/**
+ * Chụp ảnh màn hình cho một session.
+ */
+export async function triggerCapture(sessionId: string): Promise<CaptureResult> {
+  return invoke<CaptureResult>('trigger_capture', { sessionId })
+}
+
+/**
+ * Mở cửa sổ overlay chứa ảnh chụp màn hình.
+ */
+export async function openOverlay(captureId: string, screenshotPath?: string): Promise<void> {
+  return invoke<void>('open_overlay', { captureId, screenshotPath })
+}
+
+/**
+ * Hiện cửa sổ overlay sau khi đã load xong content (tránh white flash trên Windows).
+ */
+export async function showOverlay(): Promise<void> {
+  return invoke<void>('show_overlay')
+}
+
+/**
+ * Đóng cửa sổ overlay.
+ */
+export async function closeOverlay(): Promise<void> {
+  return invoke<void>('close_overlay')
+}
+
+/**
+ * Hủy lượt chụp hiện tại (xóa file và DB).
+ */
+export async function cancelCapture(captureId: string): Promise<void> {
+  return invoke<void>('cancel_capture', { captureId })
+}
+
+/**
+ * Lấy thông tin chi tiết một Capture.
+ */
+export async function getCapture(id: string): Promise<Capture> {
+  return invoke<Capture>('get_capture', { id })
 }

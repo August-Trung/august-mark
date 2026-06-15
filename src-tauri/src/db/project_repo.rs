@@ -1,14 +1,14 @@
-use rusqlite::{params, Connection};
-use chrono::Utc;
 use crate::error::{AppError, AppResult};
-use crate::models::{Project, CreateProjectPayload, UpdateProjectPayload};
+use crate::models::{CreateProjectPayload, Project, UpdateProjectPayload};
 use crate::utils::id::new_uuid;
+use chrono::Utc;
+use rusqlite::{params, Connection};
 
 /// Query a single project by its ID.
 pub fn get_project(conn: &Connection, id: &str) -> AppResult<Project> {
     conn.query_row(
         "SELECT id, name, description, color, is_archived, created_at, updated_at 
-         FROM projects WHERE id = ?1",
+         FROM projects WHERE id = ?1 AND is_deleted = 0",
         params![id],
         |row| {
             let is_archived_int: i32 = row.get(4)?;
@@ -22,13 +22,12 @@ pub fn get_project(conn: &Connection, id: &str) -> AppResult<Project> {
                 updated_at: row.get(6)?,
             })
         },
-    ).map_err(|e| {
-        match e {
-            rusqlite::Error::QueryReturnedNoRows => {
-                AppError::Validation(format!("Project with ID '{}' not found", id))
-            }
-            _ => AppError::Database(format!("Failed to query project by ID: {}", e)),
+    )
+    .map_err(|e| match e {
+        rusqlite::Error::QueryReturnedNoRows => {
+            AppError::Validation(format!("Project with ID '{}' not found", id))
         }
+        _ => AppError::Database(format!("Failed to query project by ID: {}", e)),
     })
 }
 
@@ -36,15 +35,15 @@ pub fn get_project(conn: &Connection, id: &str) -> AppResult<Project> {
 pub fn get_projects(conn: &Connection, include_archived: bool) -> AppResult<Vec<Project>> {
     let query = if include_archived {
         "SELECT id, name, description, color, is_archived, created_at, updated_at 
-         FROM projects ORDER BY name ASC"
+         FROM projects WHERE is_deleted = 0 ORDER BY name ASC"
     } else {
         "SELECT id, name, description, color, is_archived, created_at, updated_at 
-         FROM projects WHERE is_archived = 0 ORDER BY name ASC"
+         FROM projects WHERE is_archived = 0 AND is_deleted = 0 ORDER BY name ASC"
     };
 
-    let mut stmt = conn
-        .prepare(query)
-        .map_err(|e| AppError::Database(format!("Failed to prepare get_projects statement: {}", e)))?;
+    let mut stmt = conn.prepare(query).map_err(|e| {
+        AppError::Database(format!("Failed to prepare get_projects statement: {}", e))
+    })?;
 
     let project_iter = stmt
         .query_map([], |row| {
@@ -63,7 +62,8 @@ pub fn get_projects(conn: &Connection, include_archived: bool) -> AppResult<Vec<
 
     let mut projects = Vec::new();
     for p in project_iter {
-        projects.push(p.map_err(|e| AppError::Database(format!("Failed to map project row: {}", e)))?);
+        projects
+            .push(p.map_err(|e| AppError::Database(format!("Failed to map project row: {}", e)))?);
     }
     Ok(projects)
 }
@@ -86,10 +86,14 @@ pub fn create_project(conn: &Connection, payload: CreateProjectPayload) -> AppRe
 }
 
 /// Update an existing project's fields.
-pub fn update_project(conn: &Connection, id: &str, payload: UpdateProjectPayload) -> AppResult<Project> {
+pub fn update_project(
+    conn: &Connection,
+    id: &str,
+    payload: UpdateProjectPayload,
+) -> AppResult<Project> {
     // Validate that project exists
     let _existing = get_project(conn, id)?;
-    
+
     let now = Utc::now().to_rfc3339();
 
     // Construct dynamic UPDATE statement based on provided payload fields
@@ -134,15 +138,19 @@ pub fn update_project(conn: &Connection, id: &str, payload: UpdateProjectPayload
 
     let refs: Vec<&dyn rusqlite::ToSql> = params_vec.iter().map(|b| b.as_ref()).collect();
 
-    conn.execute(&query, refs.as_slice())
-        .map_err(|e| AppError::Database(format!("Failed to execute update project query: {}", e)))?;
+    conn.execute(&query, refs.as_slice()).map_err(|e| {
+        AppError::Database(format!("Failed to execute update project query: {}", e))
+    })?;
 
     get_project(conn, id)
 }
 
 /// Delete a project. Cascading constraints will automatically handle downstream rows.
 pub fn delete_project(conn: &Connection, id: &str) -> AppResult<()> {
-    conn.execute("DELETE FROM projects WHERE id = ?1", params![id])
-        .map_err(|e| AppError::Database(format!("Failed to delete project: {}", e)))?;
+    conn.execute(
+        "UPDATE projects SET is_deleted = 1 WHERE id = ?1",
+        params![id],
+    )
+    .map_err(|e| AppError::Database(format!("Failed to soft delete project: {}", e)))?;
     Ok(())
 }

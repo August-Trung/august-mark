@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>August Mark Overlay</title>
+    <script>
+      window.onerror = function(message, source, lineno, colno, error) {
+        const errStr = "JS Error: " + message + " at " + source + ":" + lineno + ":" + colno;
+        alert(errStr);
+      };
+      window.addEventListener('unhandledrejection', function(event) {
+        const errStr = 'JS Promise Rejection: ' + (event.reason ? (event.reason.stack || event.reason) : 'unknown');
+        alert(errStr);
+      });
+    </script>
+    <style>
+      /* Force transparent background before JS loads to prevent white flash */
+      html, body, #app {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+        background: transparent !important;
+        background-color: transparent !important;
+        overflow: hidden;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module" src="/src/overlay.ts"></script>
+  </body>
+</html>

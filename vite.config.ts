@@ -41,5 +41,11 @@ export default defineConfig(async () => ({
     minify: process.env.TAURI_ENV_DEBUG ? false : 'esbuild',
     // Produce sourcemaps for debug builds.
     sourcemap: !!process.env.TAURI_ENV_DEBUG,
+    rollupOptions: {
+      input: {
+        main: fileURLToPath(new URL('./index.html', import.meta.url)),
+        overlay: fileURLToPath(new URL('./overlay.html', import.meta.url))
+      }
+    }
   },
 }))

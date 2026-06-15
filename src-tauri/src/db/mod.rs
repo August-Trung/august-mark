@@ -1,3 +1,4 @@
+pub mod capture_repo;
 pub mod connection;
 pub mod migrations;
 pub mod project_repo;
