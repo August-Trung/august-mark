@@ -192,6 +192,11 @@ pub async fn close_overlay(app: AppHandle, state: State<'_, AppState>) -> AppRes
         *active = false;
     }
 
+    // Clean up any uncommitted captures (screenshot taken but never saved with Done)
+    if let Ok(conn) = state.db.lock() {
+        let _ = capture_repo::cleanup_uncommitted_captures(&conn, &state.app_data_dir);
+    }
+
     Ok(())
 }
 
@@ -209,15 +214,8 @@ pub async fn cancel_capture(
             .map_err(|e| AppError::Database(e.to_string()))?;
         let capture = capture_repo::get_capture_by_id(&conn, &capture_id)?;
 
-        // Lấy ngày YYYY-MM-DD từ timestamp created_at
-        let date = if capture.created_at.len() >= 10 {
-            &capture.created_at[..10]
-        } else {
-            ""
-        };
-
         // Xóa file trên đĩa
-        let _ = file_storage::delete_capture_files(&state.app_data_dir, &capture.id, date);
+        let _ = file_storage::delete_capture_files(&state.app_data_dir, &capture.screenshot_path);
 
         // Xóa trong database
         capture_repo::delete_capture(&conn, &capture_id)?;

@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import type { Annotation } from '@/types/annotation'
 import { saveCaptureAnnotations } from '@/services/tauriCommands'
+import { useUiStore } from './uiStore'
 
 export const useOverlayStore = defineStore('overlay', () => {
   const activeTool = ref<'marker' | 'rect' | 'arrow' | 'text' | null>(null)
@@ -103,11 +104,19 @@ export const useOverlayStore = defineStore('overlay', () => {
     });
 
     try {
+      const uiStore = useUiStore()
+      uiStore.setLoading(true)
       await saveCaptureAnnotations(captureId.value, payloads, annotatedBase64)
       reset()
-    } catch (e) {
+      uiStore.showToast({ message: 'Annotations saved successfully', type: 'success' })
+    } catch (e: any) {
       console.error('[OverlayStore] Failed to save annotations:', e)
+      const uiStore = useUiStore()
+      uiStore.showToast({ message: `Failed to save annotations: ${e?.message || e}`, type: 'error' })
       throw e
+    } finally {
+      const uiStore = useUiStore()
+      uiStore.setLoading(false)
     }
   }
 

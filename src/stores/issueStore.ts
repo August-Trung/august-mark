@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import type { Issue, UpdateIssuePayload } from '@/types/issue'
+import { useUiStore } from './uiStore'
 import {
   getIssues as apiGetIssues,
   getIssue as apiGetIssue,
@@ -69,7 +70,8 @@ export const useIssueStore = defineStore('issue', () => {
   }
 
   async function updateIssue(id: string, payload: UpdateIssuePayload) {
-    isLoading.value = true
+    const uiStore = useUiStore()
+    uiStore.setLoading(true)
     error.value = null
     try {
       const updated = await apiUpdateIssue(id, payload)
@@ -82,17 +84,21 @@ export const useIssueStore = defineStore('issue', () => {
       if (activeIssue.value && activeIssue.value.id === id) {
         activeIssue.value = updated
       }
+      uiStore.showToast({ message: 'Issue details updated', type: 'success' })
       return updated
     } catch (err: any) {
-      error.value = err.message || String(err)
+      const msg = err.message || String(err)
+      error.value = msg
+      uiStore.showToast({ message: `Failed to update issue: ${msg}`, type: 'error' })
       throw err
     } finally {
-      isLoading.value = false
+      uiStore.setLoading(false)
     }
   }
 
   async function deleteIssue(id: string) {
-    isLoading.value = true
+    const uiStore = useUiStore()
+    uiStore.setLoading(true)
     error.value = null
     try {
       await apiDeleteIssue(id)
@@ -100,11 +106,14 @@ export const useIssueStore = defineStore('issue', () => {
       if (activeIssue.value && activeIssue.value.id === id) {
         activeIssue.value = null
       }
+      uiStore.showToast({ message: 'Issue deleted', type: 'success' })
     } catch (err: any) {
-      error.value = err.message || String(err)
+      const msg = err.message || String(err)
+      error.value = msg
+      uiStore.showToast({ message: `Failed to delete issue: ${msg}`, type: 'error' })
       throw err
     } finally {
-      isLoading.value = false
+      uiStore.setLoading(false)
     }
   }
 

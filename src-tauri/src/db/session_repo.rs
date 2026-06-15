@@ -153,6 +153,7 @@ pub fn update_session(
     }
 
     let mut completing = false;
+    let mut reopening = false;
     if let Some(ref status) = payload.status {
         sets.push(format!("status = ?{}", param_index));
         params_vec.push(Box::new(status.clone()));
@@ -160,6 +161,8 @@ pub fn update_session(
 
         if status == "completed" && existing.status != "completed" {
             completing = true;
+        } else if status == "active" && existing.status == "completed" {
+            reopening = true;
         }
     }
 
@@ -167,6 +170,8 @@ pub fn update_session(
         sets.push(format!("completed_at = ?{}", param_index));
         params_vec.push(Box::new(now.clone()));
         param_index += 1;
+    } else if reopening {
+        sets.push(format!("completed_at = NULL"));
     }
 
     sets.push(format!("updated_at = ?{}", param_index));

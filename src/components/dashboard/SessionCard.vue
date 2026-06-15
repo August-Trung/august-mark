@@ -1,12 +1,17 @@
 <template>
-  <v-card class="mx-auto d-flex flex-column fill-height" variant="outlined" color="surface-variant">
+  <v-card
+    class="mx-auto d-flex flex-column fill-height session-card"
+    :class="{ 'session-completed': session.status === 'completed' }"
+    variant="outlined"
+    color="surface-variant"
+  >
     <v-card-item>
       <div class="d-flex align-center justify-space-between mb-2">
         <v-chip :color="statusColor" size="x-small" class="text-uppercase font-weight-bold">
           {{ session.status }}
         </v-chip>
         <span class="text-caption text-medium-emphasis">
-          {{ formatDate(session.createdAt) }}
+          {{ timeInfo }}
         </span>
       </div>
 
@@ -61,6 +66,17 @@
             @click="$emit('complete', session.id)"
           ></v-list-item>
           <v-list-item
+            v-else-if="session.status === 'completed'"
+            prepend-icon="mdi-play-circle"
+            title="Mark as Active"
+            @click="$emit('activate', session.id)"
+          ></v-list-item>
+          <v-list-item
+            prepend-icon="mdi-pencil"
+            title="Rename Session"
+            @click="$emit('rename', session)"
+          ></v-list-item>
+          <v-list-item
             prepend-icon="mdi-export"
             title="Export Report"
             @click="$emit('export', session)"
@@ -81,6 +97,7 @@
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { Session } from '@/types/session'
+import { formatRelativeTime, formatDate } from '@/utils/date'
 
 const props = defineProps<{
   session: Session
@@ -95,6 +112,8 @@ const openSession = () => {
 defineEmits<{
   (e: 'delete', id: string): void
   (e: 'complete', id: string): void
+  (e: 'activate', id: string): void
+  (e: 'rename', session: Session): void
   (e: 'export', session: Session): void
 }>()
 
@@ -111,18 +130,12 @@ const statusColor = computed(() => {
   }
 })
 
-function formatDate(dateStr: string): string {
-  try {
-    const d = new Date(dateStr)
-    return d.toLocaleDateString(undefined, {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-    })
-  } catch (e) {
-    return dateStr
+const timeInfo = computed(() => {
+  if (props.session.status === 'completed' && props.session.completedAt) {
+    return `Completed ${formatDate(props.session.completedAt)}`
   }
-}
+  return `Started ${formatRelativeTime(props.session.createdAt)}`
+})
 </script>
 
 <style scoped>
@@ -134,5 +147,9 @@ function formatDate(dateStr: string): string {
 }
 .border-right {
   border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+.session-completed {
+  opacity: 0.75;
+  border-color: rgba(255, 255, 255, 0.05) !important;
 }
 </style>

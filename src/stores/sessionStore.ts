@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { Session, CreateSessionPayload, UpdateSessionPayload } from '@/types/session'
+import { useUiStore } from './uiStore'
 import {
   getSessions as apiGetSessions,
   getSessionsByProject as apiGetSessionsByProject,
@@ -39,22 +40,27 @@ export const useSessionStore = defineStore('session', () => {
   }
 
   async function createSession(payload: CreateSessionPayload) {
-    isLoading.value = true
+    const uiStore = useUiStore()
+    uiStore.setLoading(true)
     error.value = null
     try {
       const newSession = await apiCreateSession(payload)
       sessions.value.unshift(newSession)
+      uiStore.showToast({ message: `Session "${newSession.title}" created`, type: 'success' })
       return newSession
     } catch (err: any) {
-      error.value = err.message || String(err)
+      const msg = err.message || String(err)
+      error.value = msg
+      uiStore.showToast({ message: `Failed to create session: ${msg}`, type: 'error' })
       throw err
     } finally {
-      isLoading.value = false
+      uiStore.setLoading(false)
     }
   }
 
   async function updateSession(id: string, payload: UpdateSessionPayload) {
-    isLoading.value = true
+    const uiStore = useUiStore()
+    uiStore.setLoading(true)
     error.value = null
     try {
       const updatedSession = await apiUpdateSession(id, payload)
@@ -62,26 +68,39 @@ export const useSessionStore = defineStore('session', () => {
       if (index !== -1) {
         sessions.value[index] = updatedSession
       }
+      
+      if (payload.status === 'completed') {
+        uiStore.showToast({ message: `Session "${updatedSession.title}" completed`, type: 'success' })
+      } else {
+        uiStore.showToast({ message: `Session "${updatedSession.title}" updated`, type: 'success' })
+      }
       return updatedSession
     } catch (err: any) {
-      error.value = err.message || String(err)
+      const msg = err.message || String(err)
+      error.value = msg
+      uiStore.showToast({ message: `Failed to update session: ${msg}`, type: 'error' })
       throw err
     } finally {
-      isLoading.value = false
+      uiStore.setLoading(false)
     }
   }
 
   async function deleteSession(id: string) {
-    isLoading.value = true
+    const uiStore = useUiStore()
+    uiStore.setLoading(true)
     error.value = null
     try {
+      const sessionTitle = sessions.value.find(s => s.id === id)?.title || ''
       await apiDeleteSession(id)
       sessions.value = sessions.value.filter(s => s.id !== id)
+      uiStore.showToast({ message: `Session "${sessionTitle}" deleted`, type: 'success' })
     } catch (err: any) {
-      error.value = err.message || String(err)
+      const msg = err.message || String(err)
+      error.value = msg
+      uiStore.showToast({ message: `Failed to delete session: ${msg}`, type: 'error' })
       throw err
     } finally {
-      isLoading.value = false
+      uiStore.setLoading(false)
     }
   }
 

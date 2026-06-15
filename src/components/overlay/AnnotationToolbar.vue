@@ -17,10 +17,10 @@
       type="button"
       class="toolbar-btn"
       :class="{ active: activeTool === 'rect' }"
-      title="Rectangle Tool (R)"
+      title="Rectangle Tool (2)"
       @click="toggleTool('rect')"
     >
-      <i class="mdi mdi-rectangle-outline"></i>
+      <i class="mdi mdi-numeric-2-circle-outline"></i>
       <span class="btn-label">Rect</span>
     </button>
 
@@ -29,10 +29,10 @@
       type="button"
       class="toolbar-btn"
       :class="{ active: activeTool === 'arrow' }"
-      title="Arrow Tool (A)"
+      title="Arrow Tool (3)"
       @click="toggleTool('arrow')"
     >
-      <i class="mdi mdi-arrow-top-right"></i>
+      <i class="mdi mdi-numeric-3-circle-outline"></i>
       <span class="btn-label">Arrow</span>
     </button>
 
@@ -41,10 +41,10 @@
       type="button"
       class="toolbar-btn"
       :class="{ active: activeTool === 'text' }"
-      title="Text Tool (T)"
+      title="Text Tool (4)"
       @click="toggleTool('text')"
     >
-      <i class="mdi mdi-format-text"></i>
+      <i class="mdi mdi-numeric-4-circle-outline"></i>
       <span class="btn-label">Text</span>
     </button>
   </div>

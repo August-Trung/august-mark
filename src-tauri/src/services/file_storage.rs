@@ -93,24 +93,13 @@ pub fn delete_file(base_dir: &Path, relative_path: &str) -> AppResult<()> {
 }
 
 /// Delete screenshot and annotated screenshot files for a capture.
-pub fn delete_capture_files(base_dir: &Path, capture_id: &str, date: &str) -> AppResult<()> {
-    let parts: Vec<&str> = date.split('-').collect();
-    if parts.len() != 3 {
-        return Err(AppError::Validation(format!(
-            "Invalid date format, expected YYYY-MM-DD: {}",
-            date
-        )));
+pub fn delete_capture_files(base_dir: &Path, screenshot_path: &str) -> AppResult<()> {
+    if screenshot_path.is_empty() {
+        return Ok(());
     }
-    let rel_path = format!(
-        "screenshots/{}/{}/{}/{}.png",
-        parts[0], parts[1], parts[2], capture_id
-    );
-    let rel_annotated_path = format!(
-        "screenshots/{}/{}/{}/{}_annotated.png",
-        parts[0], parts[1], parts[2], capture_id
-    );
+    let rel_annotated_path = screenshot_path.replace(".png", "_annotated.png");
 
-    delete_file(base_dir, &rel_path)?;
+    delete_file(base_dir, screenshot_path)?;
     delete_file(base_dir, &rel_annotated_path)?;
 
     Ok(())

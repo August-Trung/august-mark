@@ -38,6 +38,7 @@
 import { ref, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import { useCanvas } from '@/composables/useCanvas'
 import { useAnnotation } from '@/composables/useAnnotation'
+import { loadImage } from '@/utils/image'
 
 const props = defineProps<{
   screenshotUrl: string
@@ -96,19 +97,14 @@ const resizeCanvases = () => {
   }
 }
 
-const loadScreenshot = () => {
+const loadScreenshot = async () => {
   if (!props.screenshotUrl) return
 
-  screenshotImage = new Image()
-  screenshotImage.crossOrigin = 'anonymous'
-  screenshotImage.src = props.screenshotUrl
-  
-  screenshotImage.onload = () => {
+  try {
+    screenshotImage = await loadImage(props.screenshotUrl, 'anonymous')
     resizeCanvases()
     emit('load')
-  }
-
-  screenshotImage.onerror = () => {
+  } catch (err) {
     emit('error', 'Failed to load screenshot image in canvas.')
   }
 }

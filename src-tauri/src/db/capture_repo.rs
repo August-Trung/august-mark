@@ -110,3 +110,50 @@ pub fn delete_capture(conn: &Connection, id: &str) -> AppResult<()> {
     .map_err(|e| AppError::Database(format!("Failed to soft delete capture: {}", e)))?;
     Ok(())
 }
+
+/// Cleanup captures that have is_deleted = 0, no associated issues, and no annotated screenshot file on disk.
+pub fn cleanup_uncommitted_captures(conn: &Connection, app_data_dir: &std::path::Path) -> AppResult<()> {
+    // 1. Query all captures where is_deleted = 0
+    let mut stmt = conn.prepare(
+        "SELECT id, screenshot_path FROM captures WHERE is_deleted = 0"
+    ).map_err(|e| AppError::Database(format!("Failed to prepare captures cleanup statement: {}", e)))?;
+
+    let iter = stmt.query_map([], |row| {
+        Ok((row.get::<_, String>(0)?, row.get::<_, String>(1)?))
+    }).map_err(|e| AppError::Database(format!("Failed to query captures for cleanup: {}", e)))?;
+
+    let mut to_delete = Vec::new();
+    for item in iter {
+        if let Ok((id, screenshot_path)) = item {
+            // Check count of active issues associated with this capture
+            let mut count_stmt = conn.prepare(
+                "SELECT COUNT(*) FROM issues WHERE capture_id = ?1 AND is_deleted = 0"
+            ).map_err(|e| AppError::Database(e.to_string()))?;
+            let count: i64 = count_stmt.query_row(params![id], |r| r.get(0)).unwrap_or(0);
+
+            if count == 0 {
+                // If there are no issues, verify if an annotated screenshot file exists on disk
+                let annotated_path = screenshot_path.replace(".png", "_annotated.png");
+                let abs_annotated_path = app_data_dir.join(&annotated_path);
+                if !abs_annotated_path.exists() {
+                    // It was never saved/committed with "Done"
+                    to_delete.push((id, screenshot_path));
+                }
+            }
+        }
+    }
+
+    // 2. Perform deletion of files and database records
+    for (id, screenshot_path) in to_delete {
+        println!("[Cleanup] Deleting uncommitted capture: {} ({})", id, screenshot_path);
+        let abs_path = app_data_dir.join(&screenshot_path);
+        if abs_path.exists() {
+            let _ = std::fs::remove_file(abs_path);
+        }
+        
+        // Also clean up database entry (hard delete since it's a temp/orphaned capture)
+        let _ = conn.execute("DELETE FROM captures WHERE id = ?1", params![id]);
+    }
+
+    Ok(())
+}

@@ -173,6 +173,7 @@ import { convertFileSrc } from '@tauri-apps/api/core'
 import { useIssueStore } from '@/stores/issueStore'
 import { getCapture } from '@/services/tauriCommands'
 import type { Issue } from '@/types/issue'
+import { formatDateTime as formatDate } from '@/utils/date'
 
 const props = defineProps<{
   issue: Issue
@@ -267,14 +268,6 @@ const autoSave = async () => {
   }
 }
 
-function formatDate(dateStr: string): string {
-  try {
-    const d = new Date(dateStr)
-    return d.toLocaleString()
-  } catch {
-    return dateStr
-  }
-}
 </script>
 
 <style scoped>

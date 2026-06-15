@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { Project, CreateProjectPayload, UpdateProjectPayload } from '@/types/project'
+import { useUiStore } from './uiStore'
 import {
   getProjects as apiGetProjects,
   createProject as apiCreateProject,
@@ -43,23 +44,28 @@ export const useProjectStore = defineStore('project', () => {
   }
 
   async function createProject(payload: CreateProjectPayload) {
-    isLoading.value = true
+    const uiStore = useUiStore()
+    uiStore.setLoading(true)
     error.value = null
     try {
       const newProj = await apiCreateProject(payload)
       projects.value.push(newProj)
       activeProjectId.value = newProj.id
+      uiStore.showToast({ message: `Project "${newProj.name}" created successfully`, type: 'success' })
       return newProj
     } catch (err: any) {
-      error.value = err.message || String(err)
+      const msg = err.message || String(err)
+      error.value = msg
+      uiStore.showToast({ message: `Failed to create project: ${msg}`, type: 'error' })
       throw err
     } finally {
-      isLoading.value = false
+      uiStore.setLoading(false)
     }
   }
 
   async function updateProject(id: string, payload: UpdateProjectPayload) {
-    isLoading.value = true
+    const uiStore = useUiStore()
+    uiStore.setLoading(true)
     error.value = null
     try {
       const updatedProj = await apiUpdateProject(id, payload)
@@ -67,29 +73,37 @@ export const useProjectStore = defineStore('project', () => {
       if (index !== -1) {
         projects.value[index] = updatedProj
       }
+      uiStore.showToast({ message: `Project "${updatedProj.name}" updated`, type: 'success' })
       return updatedProj
     } catch (err: any) {
-      error.value = err.message || String(err)
+      const msg = err.message || String(err)
+      error.value = msg
+      uiStore.showToast({ message: `Failed to update project: ${msg}`, type: 'error' })
       throw err
     } finally {
-      isLoading.value = false
+      uiStore.setLoading(false)
     }
   }
 
   async function deleteProject(id: string) {
-    isLoading.value = true
+    const uiStore = useUiStore()
+    uiStore.setLoading(true)
     error.value = null
     try {
       await apiDeleteProject(id)
+      const projName = projects.value.find(p => p.id === id)?.name || ''
       projects.value = projects.value.filter(p => p.id !== id)
       if (activeProjectId.value === id) {
         activeProjectId.value = projects.value[0]?.id || 'default'
       }
+      uiStore.showToast({ message: `Project "${projName}" deleted`, type: 'success' })
     } catch (err: any) {
-      error.value = err.message || String(err)
+      const msg = err.message || String(err)
+      error.value = msg
+      uiStore.showToast({ message: `Failed to delete project: ${msg}`, type: 'error' })
       throw err
     } finally {
-      isLoading.value = false
+      uiStore.setLoading(false)
     }
   }
 

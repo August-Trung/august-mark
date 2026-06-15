@@ -37,6 +37,8 @@
           :session="session"
           @delete="handleDelete"
           @complete="handleComplete"
+          @activate="handleActivate"
+          @rename="openRenameDialog"
           @export="openExportDialog"
         />
       </v-col>
@@ -99,6 +101,54 @@
       confirm-color="error"
       @confirm="executeDelete"
     />
+
+    <!-- Rename Session Dialog -->
+    <v-dialog v-model="showRenameDialog" max-width="500px">
+      <v-card bg-color="surface" class="pa-4">
+        <v-card-title class="text-h5 font-weight-bold px-0 text-primary">
+          Rename Session
+        </v-card-title>
+        <v-card-text class="px-0 py-4">
+          <v-form ref="renameForm" v-model="isRenameFormValid" @submit.prevent="handleRenameSave">
+            <v-text-field
+              v-model="renameTitle"
+              label="Session Title"
+              placeholder="e.g. Homepage UI Audit"
+              :rules="[v => !!v || 'Session title is required']"
+              variant="outlined"
+              density="comfortable"
+              class="mb-3"
+              required
+            ></v-text-field>
+
+            <v-textarea
+              v-model="renameDesc"
+              label="Description (Optional)"
+              placeholder="What are we reviewing in this session?"
+              variant="outlined"
+              density="comfortable"
+              rows="3"
+            ></v-textarea>
+          </v-form>
+        </v-card-text>
+        <v-card-actions class="px-0">
+          <v-spacer></v-spacer>
+          <v-btn variant="text" color="medium-emphasis" class="text-none" @click="closeRenameDialog">
+            Cancel
+          </v-btn>
+          <v-btn
+            variant="elevated"
+            color="primary"
+            class="text-none px-4"
+            :disabled="!isRenameFormValid || isRenaming"
+            :loading="isRenaming"
+            @click="handleRenameSave"
+          >
+            Save
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
 
     <!-- Export Session Report Dialog -->
     <ExportDialog
@@ -215,6 +265,51 @@ async function handleComplete(id: string) {
     await updateSession(id, { status: 'completed' })
   } catch (err) {
     console.error('Failed to complete session:', err)
+  }
+}
+
+async function handleActivate(id: string) {
+  try {
+    await updateSession(id, { status: 'active' })
+  } catch (err) {
+    console.error('Failed to reactivate session:', err)
+  }
+}
+
+const showRenameDialog = ref(false)
+const isRenameFormValid = ref(false)
+const renameSessionId = ref<string | null>(null)
+const renameTitle = ref('')
+const renameDesc = ref('')
+const isRenaming = ref(false)
+
+function openRenameDialog(session: Session) {
+  renameSessionId.value = session.id
+  renameTitle.value = session.title
+  renameDesc.value = session.description || ''
+  showRenameDialog.value = true
+}
+
+function closeRenameDialog() {
+  showRenameDialog.value = false
+  renameSessionId.value = null
+  renameTitle.value = ''
+  renameDesc.value = ''
+}
+
+async function handleRenameSave() {
+  if (!renameSessionId.value || !renameTitle.value) return
+  isRenaming.value = true
+  try {
+    await updateSession(renameSessionId.value, {
+      title: renameTitle.value,
+      description: renameDesc.value,
+    })
+    closeRenameDialog()
+  } catch (err) {
+    console.error('Failed to rename session:', err)
+  } finally {
+    isRenaming.value = false
   }
 }
 

@@ -127,8 +127,31 @@ const handleScreenshotError = async () => {
 }
 
 const handleKeyDown = (e: KeyboardEvent) => {
+  // Ignore shortcuts when typing in inputs/textareas/contenteditable elements
+  if (
+    e.target instanceof HTMLInputElement ||
+    e.target instanceof HTMLTextAreaElement ||
+    (e.target as HTMLElement)?.isContentEditable
+  ) {
+    return
+  }
+
   if (e.key === 'Escape') {
-    handleCancel()
+    if (overlayStore.showIssueForm) {
+      // Close the issue form and discard the pending annotation
+      overlayStore.showIssueForm = false
+      overlayStore.pendingAnnotation = null
+    } else {
+      handleCancel()
+    }
+  } else if (e.key === '1') {
+    overlayStore.setTool('marker')
+  } else if (e.key === '2') {
+    overlayStore.setTool('rect')
+  } else if (e.key === '3') {
+    overlayStore.setTool('arrow')
+  } else if (e.key === '4') {
+    overlayStore.setTool('text')
   }
 }
 

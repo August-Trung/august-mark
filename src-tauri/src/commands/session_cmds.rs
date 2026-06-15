@@ -7,7 +7,7 @@ use crate::services::file_storage;
 
 #[tauri::command]
 pub fn get_sessions(state: State<'_, AppState>) -> AppResult<Vec<Session>> {
-    let conn = state.db.lock().unwrap();
+    let conn = state.db.lock().map_err(|e| AppError::Database(e.to_string()))?;
     session_repo::get_sessions(&conn)
 }
 
@@ -16,13 +16,13 @@ pub fn get_sessions_by_project(
     state: State<'_, AppState>,
     project_id: String,
 ) -> AppResult<Vec<Session>> {
-    let conn = state.db.lock().unwrap();
+    let conn = state.db.lock().map_err(|e| AppError::Database(e.to_string()))?;
     session_repo::get_sessions_by_project(&conn, &project_id)
 }
 
 #[tauri::command]
 pub fn get_session(state: State<'_, AppState>, id: String) -> AppResult<Session> {
-    let conn = state.db.lock().unwrap();
+    let conn = state.db.lock().map_err(|e| AppError::Database(e.to_string()))?;
     session_repo::get_session(&conn, &id)
 }
 
@@ -31,7 +31,7 @@ pub fn create_session(
     state: State<'_, AppState>,
     payload: CreateSessionPayload,
 ) -> AppResult<Session> {
-    let conn = state.db.lock().unwrap();
+    let conn = state.db.lock().map_err(|e| AppError::Database(e.to_string()))?;
     session_repo::create_session(&conn, payload)
 }
 
@@ -41,7 +41,7 @@ pub fn update_session(
     id: String,
     payload: UpdateSessionPayload,
 ) -> AppResult<Session> {
-    let conn = state.db.lock().unwrap();
+    let conn = state.db.lock().map_err(|e| AppError::Database(e.to_string()))?;
     session_repo::update_session(&conn, &id, payload)
 }
 
@@ -68,12 +68,7 @@ pub fn delete_session(state: State<'_, AppState>, id: String) -> AppResult<()> {
 
     // 3. Delete files from disk
     for capture in captures {
-        let date = if capture.created_at.len() >= 10 {
-            &capture.created_at[..10]
-        } else {
-            ""
-        };
-        let _ = file_storage::delete_capture_files(&state.app_data_dir, &capture.id, date);
+        let _ = file_storage::delete_capture_files(&state.app_data_dir, &capture.screenshot_path);
     }
 
     for issue in issues {

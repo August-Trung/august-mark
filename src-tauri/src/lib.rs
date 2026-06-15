@@ -98,6 +98,9 @@ pub fn run() {
             // Run schema migrations
             db::run_migrations(&mut conn)?;
 
+            // Clean up uncommitted captures from previous runs/crashes
+            let _ = db::capture_repo::cleanup_uncommitted_captures(&conn, &app_data_dir);
+
             // Instantiate and manage global AppState
             let state = state::AppState::new(conn, app_data_dir);
             app.manage(state);
@@ -111,6 +114,9 @@ pub fn run() {
                 app.global_shortcut()
                     .register(shortcut)
                     .map_err(|e| Box::new(e) as Box<dyn std::error::Error>)?;
+                
+                // Start global mouse listener background thread (T5.04)
+                services::mouse_hook::start_mouse_hook(app.handle().clone());
             }
 
             Ok(())

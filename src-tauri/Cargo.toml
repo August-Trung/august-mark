@@ -29,6 +29,7 @@ tauri-plugin-global-shortcut = "2"
 
 xcap = "0.3"
 image = "0.25"
+rdev = "0.5"
 windows = { version = "0.58", features = ["Win32_UI_WindowsAndMessaging", "Win32_Foundation"] }
 
 # Serialization
