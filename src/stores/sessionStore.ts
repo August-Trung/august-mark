@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { Session, CreateSessionPayload, UpdateSessionPayload } from '@/types/session'
 import { useUiStore } from './uiStore'
 import {
@@ -14,6 +14,29 @@ export const useSessionStore = defineStore('session', () => {
   const sessions = ref<Session[]>([])
   const isLoading = ref<boolean>(false)
   const error = ref<string | null>(null)
+  const sortBy = ref<'newest' | 'oldest' | 'issues_desc' | 'status'>('newest')
+
+  const sortedSessions = computed(() => {
+    const list = [...sessions.value]
+    if (sortBy.value === 'newest') {
+      return list.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    }
+    if (sortBy.value === 'oldest') {
+      return list.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
+    }
+    if (sortBy.value === 'issues_desc') {
+      return list.sort((a, b) => (b.issueCount || 0) - (a.issueCount || 0))
+    }
+    if (sortBy.value === 'status') {
+      const statusOrder: Record<string, number> = { active: 0, completed: 1, archived: 2 }
+      return list.sort((a, b) => {
+        const orderA = statusOrder[a.status] ?? 99
+        const orderB = statusOrder[b.status] ?? 99
+        return orderA - orderB
+      })
+    }
+    return list
+  })
 
   async function fetchSessions() {
     isLoading.value = true
@@ -108,6 +131,8 @@ export const useSessionStore = defineStore('session', () => {
     sessions,
     isLoading,
     error,
+    sortBy,
+    sortedSessions,
     fetchSessions,
     fetchSessionsByProject,
     createSession,

@@ -164,7 +164,7 @@ export const useOverlayStore = defineStore('overlay', () => {
         annotationData: JSON.stringify(ann),
         color: ann.color || '#FF6B35',
         strokeWidth: ann.strokeWidth || 2,
-        tags: []
+        tags: issue.tags || []
       }
     });
 

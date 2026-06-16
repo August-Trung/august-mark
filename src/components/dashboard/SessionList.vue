@@ -24,10 +24,26 @@
       @action="showCreateDialog = true"
     />
 
+    <!-- Sort Toolbar -->
+    <div v-else-if="sessions.length > 0" class="d-flex justify-end mb-4 align-center">
+      <span class="text-caption text-medium-emphasis mr-2">Sort by:</span>
+      <div style="width: 220px;">
+        <v-select
+          v-model="sortBy"
+          :items="sortOptions"
+          density="compact"
+          hide-details
+          variant="solo-filled"
+          flat
+          bg-color="surface-variant"
+        ></v-select>
+      </div>
+    </div>
+
     <!-- Sessions Grid -->
-    <v-row v-else>
+    <v-row v-if="sessions.length > 0">
       <v-col
-        v-for="session in sessions"
+        v-for="session in sortedSessions"
         :key="session.id"
         cols="12"
         sm="6"
@@ -175,8 +191,15 @@ const projectStore = useProjectStore()
 const { activeProjectId } = storeToRefs(projectStore)
 
 const sessionStore = useSessionStore()
-const { sessions, isLoading, error } = storeToRefs(sessionStore)
+const { sessions, sortedSessions, sortBy, isLoading, error } = storeToRefs(sessionStore)
 const { fetchSessionsByProject, createSession, deleteSession, updateSession } = sessionStore
+
+const sortOptions = [
+  { title: 'Newest First', value: 'newest' },
+  { title: 'Oldest First', value: 'oldest' },
+  { title: 'Most Issues', value: 'issues_desc' },
+  { title: 'Status (Active First)', value: 'status' }
+]
 
 const showCreateDialog = ref(false)
 const isFormValid = ref(false)

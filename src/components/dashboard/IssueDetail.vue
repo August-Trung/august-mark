@@ -139,6 +139,21 @@
               class="mb-3"
               @blur="autoSave"
             ></v-textarea>
+
+            <!-- Tags -->
+            <v-combobox
+              v-model="selectedTags"
+              label="Tags"
+              :items="tagStore.tags.map(t => t.name)"
+              variant="outlined"
+              density="comfortable"
+              multiple
+              chips
+              closable-chips
+              placeholder="Type tag and press Enter"
+              class="mb-3"
+              @update:model-value="autoSave"
+            ></v-combobox>
           </v-form>
 
           <v-divider class="my-4"></v-divider>
@@ -171,6 +186,7 @@ import { ref, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { convertFileSrc } from '@tauri-apps/api/core'
 import { useIssueStore } from '@/stores/issueStore'
+import { useTagStore } from '@/stores/tagStore'
 import { getCapture } from '@/services/tauriCommands'
 import type { Issue } from '@/types/issue'
 import { formatDateTime as formatDate } from '@/utils/date'
@@ -185,6 +201,9 @@ const emit = defineEmits<{
 
 const router = useRouter()
 const issueStore = useIssueStore()
+const tagStore = useTagStore()
+
+tagStore.loadTags()
 
 // Local Form States
 const title = ref(props.issue.title)
@@ -192,6 +211,7 @@ const description = ref(props.issue.description)
 const issueType = ref(props.issue.issueType)
 const severity = ref(props.issue.severity)
 const status = ref(props.issue.status)
+const selectedTags = ref<string[]>((props.issue.tags || []).map(t => t.name))
 
 const issueTypes = ['Bug', 'UI', 'UX', 'Suggestion', 'Requirement', 'Question']
 const severities = ['Critical', 'Major', 'Minor', 'Info']
@@ -231,6 +251,7 @@ watch(() => props.issue, (newIssue) => {
     issueType.value = newIssue.issueType
     severity.value = newIssue.severity
     status.value = newIssue.status
+    selectedTags.value = (newIssue.tags || []).map(t => t.name)
     loadCapturePath()
   }
 }, { deep: true })
@@ -244,24 +265,49 @@ const confirmDelete = () => {
 }
 
 const autoSave = async () => {
+  const currentTags = (props.issue.tags || []).map(t => t.name).sort()
+  const newTags = [...selectedTags.value].map(t => t.trim()).filter(Boolean).sort()
+  const tagsChanged = JSON.stringify(currentTags) !== JSON.stringify(newTags)
+
   // Only update if changed
   if (
     title.value === props.issue.title &&
     description.value === props.issue.description &&
     issueType.value === props.issue.issueType &&
     severity.value === props.issue.severity &&
-    status.value === props.issue.status
+    status.value === props.issue.status &&
+    !tagsChanged
   ) {
     return
   }
 
   try {
+    // Process tags: if they are new, create them in SQLite
+    const tagNames: string[] = []
+    for (const name of selectedTags.value) {
+      const trimmed = name.trim()
+      if (!trimmed) continue
+      const existing = tagStore.tags.find(t => t.name.toLowerCase() === trimmed.toLowerCase())
+      if (existing) {
+        tagNames.push(existing.name)
+      } else {
+        try {
+          const newTag = await tagStore.addTag(trimmed)
+          tagNames.push(newTag.name)
+        } catch (e) {
+          console.error('Failed to create new tag:', e)
+          tagNames.push(trimmed)
+        }
+      }
+    }
+
     await issueStore.updateIssue(props.issue.id, {
       title: title.value,
       description: description.value,
       issueType: issueType.value,
       severity: severity.value,
-      status: status.value
+      status: status.value,
+      tags: tagNames
     })
   } catch (err) {
     console.error('Failed to auto-save issue:', err)

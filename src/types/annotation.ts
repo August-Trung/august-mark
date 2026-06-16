@@ -16,6 +16,7 @@ export interface BaseAnnotation {
     issueType: string
     severity: string
     description: string
+    tags?: string[]
   }
 }
 

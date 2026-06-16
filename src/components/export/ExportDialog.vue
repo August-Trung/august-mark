@@ -11,8 +11,57 @@
           Session: <span class="text-secondary">{{ sessionTitle }}</span>
         </p>
         <p class="text-body-2 text-medium-emphasis mb-4">
-          This will generate a self-contained HTML document containing all annotated screenshots, crops, details, and metadata. All assets are base64-embedded, meaning the file can be shared and opened offline in any web browser.
+          {{ formatDescription }}
         </p>
+
+        <!-- Options Form -->
+        <div v-if="!isExporting && !statusMessage" class="mt-4">
+          <!-- Format Selector -->
+          <v-select
+            v-model="selectedFormat"
+            :items="formats"
+            label="Export Format"
+            variant="outlined"
+            density="comfortable"
+            class="mb-4"
+          ></v-select>
+
+          <!-- Severity Filter -->
+          <div class="mb-4">
+            <span class="text-subtitle-2 text-white d-block mb-1 font-weight-medium">Include Severities</span>
+            <div class="d-flex flex-wrap">
+              <v-checkbox
+                v-for="sev in severityOptions"
+                :key="sev"
+                v-model="selectedSeverities"
+                :label="sev"
+                :value="sev"
+                density="compact"
+                hide-details
+                color="secondary"
+                class="mr-3 mb-1"
+              ></v-checkbox>
+            </div>
+          </div>
+
+          <!-- Status Filter -->
+          <div class="mb-4">
+            <span class="text-subtitle-2 text-white d-block mb-1 font-weight-medium">Include Statuses</span>
+            <div class="d-flex flex-wrap">
+              <v-checkbox
+                v-for="stat in statusOptions"
+                :key="stat"
+                v-model="selectedStatuses"
+                :label="stat"
+                :value="stat"
+                density="compact"
+                hide-details
+                color="secondary"
+                class="mr-3 mb-1"
+              ></v-checkbox>
+            </div>
+          </div>
+        </div>
 
         <!-- Loading State / Success Status -->
         <div v-if="isExporting" class="d-flex flex-column align-center justify-center py-4">
@@ -43,11 +92,12 @@
           Close
         </v-btn>
         <v-btn
-          v-if="!isExporting"
+          v-if="!isExporting && !statusMessage"
           variant="elevated"
           color="secondary"
           class="text-none"
           prepend-icon="mdi-file-document-outline"
+          :disabled="isExportDisabled"
           @click="handleExport"
         >
           Choose Save Path
@@ -60,7 +110,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { save } from '@tauri-apps/plugin-dialog'
-import { exportSessionToHtml } from '@/services/tauriCommands'
+import { exportSession } from '@/services/tauriCommands'
 
 const props = defineProps<{
   modelValue: boolean
@@ -81,6 +131,39 @@ const isExporting = ref(false)
 const statusMessage = ref('')
 const statusType = ref<'success' | 'error'>('success')
 
+const selectedFormat = ref<'html' | 'pdf' | 'markdown' | 'csv'>('html')
+const formats = [
+  { title: 'HTML Webpage (.html)', value: 'html' },
+  { title: 'PDF Document (.pdf)', value: 'pdf' },
+  { title: 'Markdown Document (.md)', value: 'markdown' },
+  { title: 'CSV Tabular Sheet (.csv)', value: 'csv' },
+]
+
+const severityOptions = ['Critical', 'Major', 'Minor', 'Info']
+const selectedSeverities = ref<string[]>(['Critical', 'Major', 'Minor', 'Info'])
+
+const statusOptions = ['Draft', 'Open', 'In Progress', 'Resolved', 'Closed']
+const selectedStatuses = ref<string[]>(['Draft', 'Open', 'In Progress', 'Resolved', 'Closed'])
+
+const isExportDisabled = computed(() => {
+  return selectedSeverities.value.length === 0 || selectedStatuses.value.length === 0
+})
+
+const formatDescription = computed(() => {
+  switch (selectedFormat.value) {
+    case 'html':
+      return 'This will generate a self-contained HTML document containing all annotated screenshots, crops, details, and metadata. All assets are base64-embedded, meaning the file can be shared and opened offline in any web browser.'
+    case 'pdf':
+      return "This will generate a portable PDF document of the session report using the system's Edge browser printer. Ideal for sharing and printing."
+    case 'markdown':
+      return 'This will generate a Markdown (.md) document of the session report. Images will be saved inside a folder alongside the markdown file, making the report portable.'
+    case 'csv':
+      return 'This will generate a spreadsheet-compatible CSV file containing tabular data of the issues (ID, Title, Severity, Type, Status, Description, ScreenshotPath).'
+    default:
+      return ''
+  }
+})
+
 const close = () => {
   if (isExporting.value) return
   visible.value = false
@@ -90,29 +173,48 @@ const close = () => {
 const handleExport = async () => {
   statusMessage.value = ''
   try {
-    // Generate default filename
+    const format = selectedFormat.value
     const safeTitle = props.sessionTitle.replace(/[^a-z0-9]/gi, '_').toLowerCase()
-    const defaultFilename = `${safeTitle}_report.html`
+    let defaultFilename = `${safeTitle}_report`
+    let extension = 'html'
+    let formatFilterName = 'HTML Document'
+    
+    if (format === 'pdf') {
+      extension = 'pdf'
+      formatFilterName = 'PDF Document'
+    } else if (format === 'markdown') {
+      extension = 'md'
+      formatFilterName = 'Markdown Document'
+    } else if (format === 'csv') {
+      extension = 'csv'
+      formatFilterName = 'CSV File'
+    }
+    
+    defaultFilename = `${defaultFilename}.${extension}`
 
-    // Ask user for save location
     const selectedPath = await save({
-      title: 'Export HTML Report',
+      title: `Export ${format.toUpperCase()} Report`,
       defaultPath: defaultFilename,
       filters: [
         {
-          name: 'HTML Document',
-          extensions: ['html'],
+          name: formatFilterName,
+          extensions: [extension],
         },
       ],
     })
 
     if (!selectedPath) {
-      // User cancelled
       return
     }
 
     isExporting.value = true
-    await exportSessionToHtml(props.sessionId, selectedPath)
+    await exportSession(
+      props.sessionId,
+      selectedPath,
+      format,
+      selectedSeverities.value,
+      selectedStatuses.value
+    )
     
     statusType.value = 'success'
     statusMessage.value = `Report exported successfully to: ${selectedPath}`

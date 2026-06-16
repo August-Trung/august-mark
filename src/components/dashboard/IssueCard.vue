@@ -41,6 +41,18 @@
       <v-card-subtitle class="pl-0 text-caption text-truncate text-medium-emphasis">
         {{ issue.description || 'No description provided' }}
       </v-card-subtitle>
+      <div v-if="issue.tags && issue.tags.length > 0" class="pl-0 mt-2 d-flex flex-wrap gap-1">
+        <v-chip
+          v-for="tag in issue.tags"
+          :key="tag.id"
+          size="x-small"
+          variant="tonal"
+          :color="tag.color || '#4ECDC4'"
+          class="font-weight-medium"
+        >
+          {{ tag.name }}
+        </v-chip>
+      </div>
     </v-card-item>
 
     <v-divider class="mx-4"></v-divider>

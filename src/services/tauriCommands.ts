@@ -148,7 +148,7 @@ export async function getCapture(id: string): Promise<Capture> {
 // ============================================================================
 // Issue Commands
 // ============================================================================
-import { Issue, CreateIssuePayload, UpdateIssuePayload } from '@/types/issue'
+import { Issue, CreateIssuePayload, UpdateIssuePayload, Tag } from '@/types/issue'
 
 export async function saveCaptureAnnotations(
   captureId: string,
@@ -183,8 +183,14 @@ export async function deleteIssue(id: string): Promise<void> {
 // ============================================================================
 // Export Commands
 // ============================================================================
-export async function exportSessionToHtml(sessionId: string, outputPath: string): Promise<void> {
-  return invoke<void>('export_session_to_html', { sessionId, outputPath })
+export async function exportSession(
+  sessionId: string,
+  outputPath: string,
+  format: string,
+  severities: string[],
+  statuses: string[]
+): Promise<void> {
+  return invoke<void>('export_session', { sessionId, outputPath, format, severities, statuses })
 }
 
 // ============================================================================
@@ -201,4 +207,41 @@ export async function getSetting(key: string): Promise<string | null> {
 
 export async function updateSetting(key: string, value: string): Promise<void> {
   return invoke<void>('update_setting', { key, value })
+}
+
+// ============================================================================
+// Tag Commands
+// ============================================================================
+
+export async function getAllTags(): Promise<Tag[]> {
+  return invoke<Tag[]>('get_all_tags')
+}
+
+export async function createTag(name: string, color: string): Promise<Tag> {
+  return invoke<Tag>('create_tag', { name, color })
+}
+
+export async function associateTagWithIssue(issueId: string, tagId: string): Promise<void> {
+  return invoke<void>('associate_tag_with_issue', { issueId, tagId })
+}
+
+export async function getTagsByIssue(issueId: string): Promise<Tag[]> {
+  return invoke<Tag[]>('get_tags_by_issue', { issueId })
+}
+
+export async function clearIssueTags(issueId: string): Promise<void> {
+  return invoke<void>('clear_issue_tags', { issueId })
+}
+
+// ============================================================================
+// Search Commands
+// ============================================================================
+
+export interface SearchResult {
+  sessions: Session[]
+  issues: Issue[]
+}
+
+export async function searchAll(query: string): Promise<SearchResult> {
+  return invoke<SearchResult>('search_all', { query })
 }

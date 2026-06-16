@@ -19,16 +19,49 @@ fn file_to_base64(base_dir: &Path, rel_path: &str) -> String {
     "".to_string()
 }
 
+fn html_escape(input: &str) -> String {
+    let mut escaped = String::new();
+    for c in input.chars() {
+        match c {
+            '<' => escaped.push_str("&lt;"),
+            '>' => escaped.push_str("&gt;"),
+            '&' => escaped.push_str("&amp;"),
+            '"' => escaped.push_str("&quot;"),
+            '\'' => escaped.push_str("&#x27;"),
+            _ => escaped.push(c),
+        }
+    }
+    escaped
+}
+
+fn csv_escape(field: &str) -> String {
+    if field.contains(',') || field.contains('"') || field.contains('\n') || field.contains('\r') {
+        let escaped = field.replace('"', "\"\"");
+        format!("\"{}\"", escaped)
+    } else {
+        field.to_string()
+    }
+}
+
 pub fn export_session_html(
     conn: &Connection,
     base_dir: &Path,
     session_id: &str,
     output_path: &Path,
+    severities: &[String],
+    statuses: &[String],
 ) -> AppResult<()> {
     let session = session_repo::get_session(conn, session_id)?;
     let project = project_repo::get_project(conn, &session.project_id)?;
     let captures = capture_repo::get_captures_by_session(conn, session_id)?;
-    let issues = issue_repo::get_by_session(conn, session_id)?;
+    let mut issues = issue_repo::get_by_session(conn, session_id)?;
+
+    if !severities.is_empty() {
+        issues.retain(|i| severities.contains(&i.severity));
+    }
+    if !statuses.is_empty() {
+        issues.retain(|i| statuses.contains(&i.status));
+    }
 
     // Statistics
     let total_issues = issues.len();
@@ -519,17 +552,173 @@ pub fn export_session_html(
     Ok(())
 }
 
-fn html_escape(input: &str) -> String {
-    let mut escaped = String::new();
-    for c in input.chars() {
-        match c {
-            '<' => escaped.push_str("&lt;"),
-            '>' => escaped.push_str("&gt;"),
-            '&' => escaped.push_str("&amp;"),
-            '"' => escaped.push_str("&quot;"),
-            '\'' => escaped.push_str("&#x27;"),
-            _ => escaped.push(c),
+pub fn export_session_markdown(
+    conn: &Connection,
+    base_dir: &Path,
+    session_id: &str,
+    output_path: &Path,
+    severities: &[String],
+    statuses: &[String],
+) -> AppResult<()> {
+    let session = session_repo::get_session(conn, session_id)?;
+    let project = project_repo::get_project(conn, &session.project_id)?;
+    let mut issues = issue_repo::get_by_session(conn, session_id)?;
+
+    if !severities.is_empty() {
+        issues.retain(|i| severities.contains(&i.severity));
+    }
+    if !statuses.is_empty() {
+        issues.retain(|i| statuses.contains(&i.status));
+    }
+
+    let report_name = output_path.file_stem().and_then(|s| s.to_str()).unwrap_or("report");
+    let images_dir_name = format!("{}_images", report_name);
+    
+    let parent_dir = output_path.parent().ok_or_else(|| {
+        AppError::FileIO("Invalid output path".to_string())
+    })?;
+    let target_images_dir = parent_dir.join(&images_dir_name);
+
+    if !issues.is_empty() {
+        fs::create_dir_all(&target_images_dir).map_err(|e| AppError::FileIO(e.to_string()))?;
+    }
+
+    let mut md = String::new();
+    md.push_str(&format!("# Session Report: {}\n\n", session.title));
+    md.push_str(&format!("- **Project:** {}\n", project.name));
+    md.push_str(&format!("- **Status:** {}\n", session.status));
+    md.push_str(&format!("- **Description:** {}\n\n", session.description));
+
+    md.push_str("## Issues List\n\n");
+    md.push_str("| # | Title | Type | Severity | Status | Description | Screenshot |\n");
+    md.push_str("|---|-------|------|----------|--------|-------------|------------|\n");
+
+    for issue in &issues {
+        let mut rel_image_path = String::new();
+        if let Some(ref crop_rel_path) = issue.crop_path {
+            let src_crop_path = base_dir.join(crop_rel_path);
+            if src_crop_path.exists() {
+                if let Some(file_name) = src_crop_path.file_name() {
+                    let target_crop_path = target_images_dir.join(file_name);
+                    if let Err(e) = fs::copy(&src_crop_path, &target_crop_path) {
+                        log::error!("Failed to copy crop image: {}", e);
+                    } else {
+                        rel_image_path = format!("{}/{}", images_dir_name, file_name.to_string_lossy());
+                    }
+                }
+            }
+        }
+
+        let img_markdown = if !rel_image_path.is_empty() {
+            format!("![Crop]({})", rel_image_path)
+        } else {
+            "No Image".to_string()
+        };
+
+        let title_esc = issue.title.replace('|', "\\|");
+        let desc_esc = issue.description.replace('|', "\\|").replace('\n', "<br>");
+
+        md.push_str(&format!(
+            "| {} | {} | {} | {} | {} | {} | {} |\n",
+            issue.marker_number,
+            title_esc,
+            issue.issue_type,
+            issue.severity,
+            issue.status,
+            desc_esc,
+            img_markdown
+        ));
+    }
+
+    if let Some(parent) = output_path.parent() {
+        fs::create_dir_all(parent).map_err(|e| AppError::FileIO(e.to_string()))?;
+    }
+    fs::write(output_path, md).map_err(|e| AppError::FileIO(e.to_string()))?;
+
+    Ok(())
+}
+
+pub fn export_session_csv(
+    conn: &Connection,
+    session_id: &str,
+    output_path: &Path,
+    severities: &[String],
+    statuses: &[String],
+) -> AppResult<()> {
+    let mut issues = issue_repo::get_by_session(conn, session_id)?;
+    if !severities.is_empty() {
+        issues.retain(|i| severities.contains(&i.severity));
+    }
+    if !statuses.is_empty() {
+        issues.retain(|i| statuses.contains(&i.status));
+    }
+
+    let mut csv_content = String::new();
+    csv_content.push_str("ID,Title,Severity,Type,Status,Description,ScreenshotPath\n");
+
+    for issue in issues {
+        let row = format!(
+            "{},{},{},{},{},{},{}\n",
+            csv_escape(&issue.id),
+            csv_escape(&issue.title),
+            csv_escape(&issue.severity),
+            csv_escape(&issue.issue_type),
+            csv_escape(&issue.status),
+            csv_escape(&issue.description),
+            csv_escape(&issue.crop_path.unwrap_or_default())
+        );
+        csv_content.push_str(&row);
+    }
+
+    if let Some(parent) = output_path.parent() {
+        fs::create_dir_all(parent).map_err(|e| AppError::FileIO(e.to_string()))?;
+    }
+    fs::write(output_path, csv_content).map_err(|e| AppError::FileIO(e.to_string()))?;
+    Ok(())
+}
+
+use std::path::PathBuf;
+
+fn find_edge_path() -> PathBuf {
+    let paths = [
+        r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe",
+        r"C:\Program Files\Microsoft\Edge\Application\msedge.exe",
+    ];
+    for p in &paths {
+        let path = Path::new(p);
+        if path.exists() {
+            return path.to_path_buf();
         }
     }
-    escaped
+    PathBuf::from("msedge")
+}
+
+pub fn export_session_pdf(
+    conn: &Connection,
+    base_dir: &Path,
+    session_id: &str,
+    output_path: &Path,
+    severities: &[String],
+    statuses: &[String],
+) -> AppResult<()> {
+    let temp_html_path = output_path.with_extension("tmp.html");
+    export_session_html(conn, base_dir, session_id, &temp_html_path, severities, statuses)?;
+    
+    let edge_exe = find_edge_path();
+    let file_url = format!("file:///{}", temp_html_path.to_string_lossy().replace('\\', "/"));
+    
+    let status = std::process::Command::new(edge_exe)
+        .arg("--headless")
+        .arg("--disable-gpu")
+        .arg(format!("--print-to-pdf={}", output_path.to_string_lossy()))
+        .arg(&file_url)
+        .status();
+        
+    let _ = fs::remove_file(&temp_html_path);
+    
+    match status {
+        Ok(s) if s.success() => Ok(()),
+        Ok(_) => Err(AppError::FileIO("Microsoft Edge failed to print PDF".to_string())),
+        Err(e) => Err(AppError::FileIO(format!("Failed to start Microsoft Edge for PDF generation: {}", e))),
+    }
 }

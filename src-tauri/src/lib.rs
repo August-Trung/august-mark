@@ -75,11 +75,17 @@ pub fn run() {
             commands::issue_cmds::get_issue,
             commands::issue_cmds::update_issue,
             commands::issue_cmds::delete_issue,
-            commands::export_cmds::export_session_to_html,
+            commands::export_cmds::export_session,
             commands::settings_cmds::get_all_settings,
             commands::settings_cmds::get_setting,
             commands::settings_cmds::update_setting,
             commands::app_cmds::get_app_stats,
+            commands::tag_cmds::get_all_tags,
+            commands::tag_cmds::create_tag,
+            commands::tag_cmds::associate_tag_with_issue,
+            commands::tag_cmds::get_tags_by_issue,
+            commands::tag_cmds::clear_issue_tags,
+            commands::search_cmds::search_all,
         ])
         .on_window_event(|window, event| {
             if let tauri::WindowEvent::CloseRequested { api, .. } = event {

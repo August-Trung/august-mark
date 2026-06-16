@@ -61,6 +61,19 @@
         max-rows="6"
         auto-grow
       ></v-textarea>
+
+      <!-- Tags -->
+      <v-combobox
+        v-model="selectedTags"
+        label="Tags"
+        :items="tagStore.tags.map(t => t.name)"
+        variant="outlined"
+        density="comfortable"
+        multiple
+        chips
+        closable-chips
+        placeholder="Type tag and press Enter"
+      ></v-combobox>
     </v-form>
 
     <div class="panel-footer">
@@ -88,8 +101,10 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
 import { useOverlayStore } from '@/stores/overlayStore'
+import { useTagStore } from '@/stores/tagStore'
 
 const overlayStore = useOverlayStore()
+const tagStore = useTagStore()
 
 const showIssueForm = computed({
   get: () => overlayStore.showIssueForm,
@@ -113,6 +128,7 @@ const title = ref('')
 const issueType = ref('Bug')
 const severity = ref('Minor')
 const description = ref('')
+const selectedTags = ref<string[]>([])
 
 const issueTypes = ['Bug', 'UI', 'UX', 'Suggestion', 'Requirement', 'Question']
 const severities = ['Critical', 'Major', 'Minor', 'Info']
@@ -124,22 +140,44 @@ watch(() => overlayStore.showIssueForm, (visible) => {
     issueType.value = 'Bug'
     severity.value = 'Minor'
     description.value = ''
+    selectedTags.value = []
+    tagStore.loadTags()
     if (formRef.value) {
       formRef.value.resetValidation()
     }
   }
 })
 
-const handleSave = () => {
+const handleSave = async () => {
   if (formRef.value && !isFormValid.value) return
 
   if (overlayStore.pendingAnnotation) {
+    // Process tags: if they are new, create them in SQLite
+    const tagNames: string[] = []
+    for (const name of selectedTags.value) {
+      const trimmed = name.trim()
+      if (!trimmed) continue
+      const existing = tagStore.tags.find(t => t.name.toLowerCase() === trimmed.toLowerCase())
+      if (existing) {
+        tagNames.push(existing.name)
+      } else {
+        try {
+          const newTag = await tagStore.addTag(trimmed)
+          tagNames.push(newTag.name)
+        } catch (e) {
+          console.error('Failed to create new tag:', e)
+          tagNames.push(trimmed)
+        }
+      }
+    }
+
     // Attach issue metadata to the annotation
     overlayStore.pendingAnnotation.issue = {
       title: title.value,
       issueType: issueType.value,
       severity: severity.value,
-      description: description.value
+      description: description.value,
+      tags: tagNames
     }
     
     // Commit the annotation

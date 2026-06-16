@@ -19,10 +19,13 @@ export const useIssueStore = defineStore('issue', () => {
     types: [] as string[],
     severities: [] as string[],
     statuses: [] as string[],
+    tags: [] as string[],
   })
 
+  const sortBy = ref<'newest' | 'oldest' | 'severity' | 'status'>('newest')
+
   const filteredIssues = computed(() => {
-    return issues.value.filter(issue => {
+    const list = issues.value.filter(issue => {
       if (filters.value.types.length > 0 && !filters.value.types.includes(issue.issueType)) {
         return false
       }
@@ -32,14 +35,46 @@ export const useIssueStore = defineStore('issue', () => {
       if (filters.value.statuses.length > 0 && !filters.value.statuses.includes(issue.status)) {
         return false
       }
+      if (filters.value.tags.length > 0) {
+        const issueTagNames = (issue.tags || []).map(t => t.name)
+        const hasMatchingTag = filters.value.tags.some(t => issueTagNames.includes(t))
+        if (!hasMatchingTag) {
+          return false
+        }
+      }
       return true
     })
+
+    if (sortBy.value === 'newest') {
+      return list.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    }
+    if (sortBy.value === 'oldest') {
+      return list.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
+    }
+    if (sortBy.value === 'severity') {
+      const severityOrder: Record<string, number> = { Critical: 0, Major: 1, Minor: 2, Info: 3 }
+      return list.sort((a, b) => {
+        const orderA = severityOrder[a.severity] ?? 99
+        const orderB = severityOrder[b.severity] ?? 99
+        return orderA - orderB
+      })
+    }
+    if (sortBy.value === 'status') {
+      const statusOrder: Record<string, number> = { Draft: 0, Open: 1, 'In Progress': 2, Resolved: 3, Closed: 4 }
+      return list.sort((a, b) => {
+        const orderA = statusOrder[a.status] ?? 99
+        const orderB = statusOrder[b.status] ?? 99
+        return orderA - orderB
+      })
+    }
+    return list
   })
 
   function clearFilters() {
     filters.value.types = []
     filters.value.severities = []
     filters.value.statuses = []
+    filters.value.tags = []
   }
 
 
@@ -123,6 +158,7 @@ export const useIssueStore = defineStore('issue', () => {
     isLoading,
     error,
     filters,
+    sortBy,
     filteredIssues,
     clearFilters,
     fetchIssuesBySession,
