@@ -186,3 +186,19 @@ export async function deleteIssue(id: string): Promise<void> {
 export async function exportSessionToHtml(sessionId: string, outputPath: string): Promise<void> {
   return invoke<void>('export_session_to_html', { sessionId, outputPath })
 }
+
+// ============================================================================
+// Settings Commands
+// ============================================================================
+
+export async function getAllSettings(): Promise<Record<string, string>> {
+  return invoke<Record<string, string>>('get_all_settings')
+}
+
+export async function getSetting(key: string): Promise<string | null> {
+  return invoke<string | null>('get_setting', { key })
+}
+
+export async function updateSetting(key: string, value: string): Promise<void> {
+  return invoke<void>('update_setting', { key, value })
+}

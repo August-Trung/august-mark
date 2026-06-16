@@ -17,6 +17,8 @@ pub mod state;
 pub mod utils;
 
 use tauri::{Emitter, Manager};
+use tauri::menu::{MenuBuilder, MenuItemBuilder};
+use tauri::tray::{TrayIconBuilder, TrayIconEvent};
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -24,6 +26,7 @@ pub fn run() {
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_window_state::Builder::default().build())
         .plugin(
             tauri_plugin_global_shortcut::Builder::new()
                 .with_handler(|app, shortcut, event| {
@@ -73,7 +76,30 @@ pub fn run() {
             commands::issue_cmds::update_issue,
             commands::issue_cmds::delete_issue,
             commands::export_cmds::export_session_to_html,
+            commands::settings_cmds::get_all_settings,
+            commands::settings_cmds::get_setting,
+            commands::settings_cmds::update_setting,
+            commands::app_cmds::get_app_stats,
         ])
+        .on_window_event(|window, event| {
+            if let tauri::WindowEvent::CloseRequested { api, .. } = event {
+                if window.label() == "main" {
+                    let app = window.app_handle();
+                    if let Some(state) = app.try_state::<state::AppState>() {
+                        let conn = state.db.lock().unwrap();
+                        let minimize = crate::db::settings_repo::get_setting(&conn, "minimize_to_tray")
+                            .unwrap_or(None)
+                            .map(|v| v == "true" || v == "\"true\"")
+                            .unwrap_or(false);
+
+                        if minimize {
+                            api.prevent_close();
+                            let _ = window.hide();
+                        }
+                    }
+                }
+            }
+        })
         .setup(|app| {
             #[cfg(debug_assertions)]
             {
@@ -117,6 +143,58 @@ pub fn run() {
                 
                 // Start global mouse listener background thread (T5.04)
                 services::mouse_hook::start_mouse_hook(app.handle().clone());
+
+                // System Tray Setup (T1.05)
+                let quit_i = MenuItemBuilder::with_id("quit", "Thoát").build(app)?;
+                let capture_i = MenuItemBuilder::with_id("capture", "Chụp màn hình").build(app)?;
+                let open_i = MenuItemBuilder::with_id("open", "Mở August Mark").build(app)?;
+                let settings_i = MenuItemBuilder::with_id("settings", "Cài đặt").build(app)?;
+
+                let menu = MenuBuilder::new(app)
+                    .item(&capture_i)
+                    .item(&open_i)
+                    .item(&settings_i)
+                    .separator()
+                    .item(&quit_i)
+                    .build()?;
+
+                let _tray = TrayIconBuilder::new()
+                    .icon(app.default_window_icon().unwrap().clone())
+                    .menu(&menu)
+                    .on_menu_event(move |app, event| {
+                        match event.id.as_ref() {
+                            "quit" => {
+                                app.exit(0);
+                            }
+                            "capture" => {
+                                let _ = app.emit("capture:trigger", ());
+                            }
+                            "open" => {
+                                if let Some(window) = app.get_webview_window("main") {
+                                    let _ = window.show();
+                                    let _ = window.set_focus();
+                                }
+                            }
+                            "settings" => {
+                                if let Some(window) = app.get_webview_window("main") {
+                                    let _ = window.show();
+                                    let _ = window.set_focus();
+                                    let _ = window.emit("navigate", "/settings");
+                                }
+                            }
+                            _ => {}
+                        }
+                    })
+                    .on_tray_icon_event(|tray, event| {
+                        if let TrayIconEvent::Click { button: tauri::tray::MouseButton::Left, .. } = event {
+                            let app = tray.app_handle();
+                            if let Some(window) = app.get_webview_window("main") {
+                                let _ = window.show();
+                                let _ = window.set_focus();
+                            }
+                        }
+                    })
+                    .build(app)?;
             }
 
             Ok(())

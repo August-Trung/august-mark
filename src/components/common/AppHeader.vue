@@ -30,7 +30,7 @@
       <div class="d-flex align-center text-caption text-medium-emphasis bg-surface px-3 py-1 rounded border">
         <v-icon size="14" class="mr-1" color="primary">mdi-keyboard</v-icon>
         <span class="mr-1">Trigger Capture:</span>
-        <kbd class="kbd-key mr-1">Middle Click</kbd> or <kbd class="kbd-key ml-1">PrntScrn</kbd>
+        <kbd class="kbd-key mr-1">Middle Click</kbd> or <kbd class="kbd-key ml-1">Ctrl + Shift + M</kbd>
       </div>
     </div>
   </v-sheet>

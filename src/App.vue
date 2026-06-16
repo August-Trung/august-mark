@@ -39,15 +39,46 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onMounted, watch } from 'vue'
 import AppSidebar from '@/components/common/AppSidebar.vue'
 import { useTauriEvents } from '@/composables/useTauriEvents'
 import { useUiStore } from '@/stores/uiStore'
+import { useSettingsStore } from '@/stores/settingsStore'
+import { useProjectStore } from '@/stores/projectStore'
+import { useTheme } from 'vuetify'
 
 const uiStore = useUiStore()
+const settingsStore = useSettingsStore()
+const projectStore = useProjectStore()
+const theme = useTheme()
 
 // Initialize Tauri event listeners globally for the main window
 useTauriEvents()
+
+function applyTheme(t: 'dark' | 'light' | 'system') {
+  let activeTheme = t
+  if (t === 'system') {
+    const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+    activeTheme = isDark ? 'dark' : 'light'
+  }
+  theme.global.name.value = activeTheme === 'dark' ? 'augustDark' : 'augustLight'
+}
+
+onMounted(async () => {
+  // Load settings from database
+  await settingsStore.loadSettings()
+  
+  // Set theme initially
+  applyTheme(settingsStore.theme)
+  
+  // Fetch projects list
+  await projectStore.fetchProjects()
+})
+
+// Watch theme setting changes
+watch(() => settingsStore.theme, (newTheme) => {
+  applyTheme(newTheme)
+})
 
 const toastColor = computed(() => {
   switch (uiStore.toastType) {

@@ -1,4 +1,5 @@
 import { onMounted, onUnmounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { listenToEvent } from '@/services/tauriEvents'
 import { useProjectStore } from '@/stores/projectStore'
 import { useSessionStore } from '@/stores/sessionStore'
@@ -9,9 +10,11 @@ import { triggerCapture, openOverlay } from '@/services/tauriCommands'
  * Catches the global hotkey capture trigger and starts the capture workflow.
  */
 export function useTauriEvents() {
+  const router = useRouter()
   const projectStore = useProjectStore()
   const sessionStore = useSessionStore()
   let unlistenTrigger: (() => void) | null = null
+  let unlistenNavigate: (() => void) | null = null
 
   // Guard: prevent concurrent capture workflows
   let isCapturing = false
@@ -91,12 +94,26 @@ export function useTauriEvents() {
     } catch (e) {
       console.error('[Events] Failed to register capture:trigger listener:', e)
     }
+
+    try {
+      unlistenNavigate = await listenToEvent<string>('navigate', (path) => {
+        console.log('[Events] Received navigate event:', path)
+        router.push(path)
+      })
+      console.log('[Events] navigate listener registered')
+    } catch (e) {
+      console.error('[Events] Failed to register navigate listener:', e)
+    }
   })
 
   onUnmounted(() => {
     if (unlistenTrigger) {
       unlistenTrigger()
       console.log('[Events] capture:trigger listener removed')
+    }
+    if (unlistenNavigate) {
+      unlistenNavigate()
+      console.log('[Events] navigate listener removed')
     }
   })
 }

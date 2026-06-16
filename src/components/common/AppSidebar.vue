@@ -28,6 +28,13 @@
         color="primary"
       ></v-list-item>
       <v-list-item
+        prepend-icon="mdi-cog"
+        title="Settings"
+        value="settings"
+        to="/settings"
+        color="primary"
+      ></v-list-item>
+      <v-list-item
         prepend-icon="mdi-information"
         title="About"
         value="about"
