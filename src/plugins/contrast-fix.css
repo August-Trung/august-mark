@@ -42,7 +42,6 @@
 .v-theme--augustDark .v-field__placeholder {
   color: rgba(255, 255, 255, 0.4) !important;
   -webkit-text-fill-color: rgba(255, 255, 255, 0.4) !important;
-  opacity: 1 !important;
 }
 
 /* Field outline borders (Make borders slightly more visible) */
@@ -88,7 +87,6 @@
 .v-theme--augustLight .v-field__placeholder {
   color: rgba(0, 0, 0, 0.4) !important;
   -webkit-text-fill-color: rgba(0, 0, 0, 0.4) !important;
-  opacity: 1 !important;
 }
 
 /* Field outline borders */

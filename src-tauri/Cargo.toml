@@ -45,11 +45,22 @@ chrono = { version = "0.4", features = ["serde"] }
 # SQLite Database
 rusqlite = { version = "0.31", features = ["bundled"] }
 
+# Async runtime helpers
+tokio = { version = "1", features = ["full"] }
+
 # Logging
 log = "0.4"
 
 # Base64 Encoding
 base64 = "0.22"
+
+# Network & Web APIs for Google Drive
+reqwest = { version = "0.12", features = ["json", "multipart", "blocking"] }
+tiny_http = "0.12"
+url = "2"
+
+# Compression for backups
+zip = { version = "1.0", default-features = false, features = ["deflate"] }
 
 [profile.release]
 # Optimize binary size. Use this in production.

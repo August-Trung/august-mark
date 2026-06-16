@@ -357,4 +357,13 @@ function openExportDialog(session: Session) {
   border: 2px dashed rgba(255, 255, 255, 0.12) !important;
   background-color: rgba(255, 255, 255, 0.02);
 }
+
+/* Ensure proper gutters and padding for transition-group with class v-row */
+.v-row {
+  --v-grid-gutters: 24px;
+  margin: -12px;
+}
+.v-col {
+  padding: 12px;
+}
 </style>

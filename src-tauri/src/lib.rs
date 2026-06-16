@@ -86,6 +86,13 @@ pub fn run() {
             commands::tag_cmds::get_tags_by_issue,
             commands::tag_cmds::clear_issue_tags,
             commands::search_cmds::search_all,
+            commands::gdrive_cmds::connect_gdrive,
+            commands::gdrive_cmds::disconnect_gdrive,
+            commands::gdrive_cmds::check_gdrive_status,
+            commands::gdrive_cmds::backup_to_gdrive,
+            commands::gdrive_cmds::restore_from_gdrive,
+            commands::gdrive_cmds::list_backups_on_gdrive,
+            commands::gdrive_cmds::share_session_on_gdrive,
         ])
         .on_window_event(|window, event| {
             if let tauri::WindowEvent::CloseRequested { api, .. } = event {

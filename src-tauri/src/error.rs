@@ -21,6 +21,15 @@ pub enum AppError {
     #[error("Export error: {0}")]
     Export(String),
 
+    #[error("Network error: {0}")]
+    Network(#[from] reqwest::Error),
+
+    #[error("OAuth error: {0}")]
+    OAuth(String),
+
+    #[error("Google Drive API error: {0}")]
+    GDrive(String),
+
     #[error("Generic error: {0}")]
     Generic(String),
 }

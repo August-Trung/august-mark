@@ -35,7 +35,21 @@
             </p>
           </div>
 
-          <div class="d-flex gap-2">
+          <div class="d-flex gap-3">
+            <!-- Share to Cloud Button (Only if Google Drive connected) -->
+            <v-btn
+              v-if="settingsStore.gdriveConnected"
+              color="info"
+              variant="elevated"
+              size="large"
+              prepend-icon="mdi-cloud-upload"
+              class="text-none"
+              :loading="isSharing"
+              @click="handleCloudShare"
+            >
+              Share to Cloud
+            </v-btn>
+
             <!-- Export Button -->
             <v-btn
               color="secondary"
@@ -102,6 +116,54 @@
       :session-id="session.id"
       :session-title="session.title"
     />
+
+    <!-- Cloud Share Result Dialog -->
+    <v-dialog v-model="showShareDialog" max-width="500">
+      <v-card border>
+        <v-card-title class="d-flex align-center justify-space-between py-4 px-6 border-b">
+          <span class="text-h6 font-weight-bold">Shared to Google Drive</span>
+          <v-btn icon="mdi-close" variant="text" density="comfortable" @click="showShareDialog = false"></v-btn>
+        </v-card-title>
+        
+        <v-card-text class="pa-6 text-center">
+          <v-icon icon="mdi-cloud-check" size="64" color="success" class="mb-4"></v-icon>
+          <div class="text-h6 font-weight-bold text-white mb-2">Report Shared Successfully!</div>
+          <div class="text-body-2 text-medium-emphasis mb-6">
+            Anyone with this link can view the interactive HTML session report.
+          </div>
+
+          <v-text-field
+            v-model="shareUrl"
+            readonly
+            variant="outlined"
+            density="comfortable"
+            append-inner-icon="mdi-content-copy"
+            @click:append-inner="copyShareUrl"
+            class="mb-2"
+          ></v-text-field>
+        </v-card-text>
+
+        <v-card-actions class="py-4 px-6 border-t d-flex justify-end">
+          <v-btn color="primary" variant="flat" @click="showShareDialog = false">Done</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <!-- Success Toast Notification -->
+    <v-snackbar v-model="showSuccess" color="success" timeout="4000" location="top">
+      {{ successMessage }}
+      <template v-slot:actions>
+        <v-btn variant="text" @click="showSuccess = false">Close</v-btn>
+      </template>
+    </v-snackbar>
+
+    <!-- Error Toast Notification -->
+    <v-snackbar v-model="showError" color="error" timeout="6000" location="top">
+      {{ errorMessage }}
+      <template v-slot:actions>
+        <v-btn variant="text" @click="showError = false">Close</v-btn>
+      </template>
+    </v-snackbar>
   </div>
 </template>
 
@@ -109,7 +171,8 @@
 import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
-import { getSession, triggerCapture, openOverlay } from '@/services/tauriCommands'
+import { getSession, triggerCapture, openOverlay, shareSessionOnGdrive } from '@/services/tauriCommands'
+import { useSettingsStore } from '@/stores/settingsStore'
 import { useIssueStore } from '@/stores/issueStore'
 import { listenToEvent } from '@/services/tauriEvents'
 import AppHeader from '@/components/common/AppHeader.vue'
@@ -126,7 +189,9 @@ const sessionId = route.params.id as string
 const session = ref<Session | null>(null)
 const isLoadingSession = ref(true)
 const isCapturing = ref(false)
+const isSharing = ref(false)
 
+const settingsStore = useSettingsStore()
 const issueStore = useIssueStore()
 const { issues, filteredIssues, isLoading: isLoadingIssues } = storeToRefs(issueStore)
 
@@ -157,6 +222,7 @@ let unlistenSessionUpdated: (() => void) | null = null
 
 onMounted(async () => {
   issueStore.clearFilters()
+  await settingsStore.loadSettings()
   if (sessionId) {
     await loadSessionDetails()
     await loadIssues()
@@ -213,6 +279,39 @@ const handleExport = () => {
   showExportDialog.value = true
 }
 
+const showShareDialog = ref(false)
+const shareUrl = ref('')
+const showSuccess = ref(false)
+const successMessage = ref('')
+const showError = ref(false)
+const errorMessage = ref('')
+
+async function handleCloudShare() {
+  if (!sessionId) return
+  isSharing.value = true
+  try {
+    const url = await shareSessionOnGdrive(sessionId)
+    shareUrl.value = url
+    showShareDialog.value = true
+  } catch (err: any) {
+    console.error('Cloud share failed:', err)
+    errorMessage.value = err?.message || err || 'Failed to share session report to Google Drive'
+    showError.value = true
+  } finally {
+    isSharing.value = false
+  }
+}
+
+async function copyShareUrl() {
+  try {
+    await navigator.clipboard.writeText(shareUrl.value)
+    successMessage.value = 'Share link copied to clipboard!'
+    showSuccess.value = true
+  } catch (err) {
+    console.error('Failed to copy text:', err)
+  }
+}
+
 const statusColor = computed(() => {
   if (!session.value) return 'medium-emphasis'
   switch (session.value.status) {
@@ -227,5 +326,8 @@ const statusColor = computed(() => {
 <style scoped>
 .gap-2 {
   gap: 8px;
+}
+.gap-3 {
+  gap: 12px;
 }
 </style>

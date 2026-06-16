@@ -245,3 +245,35 @@ export interface SearchResult {
 export async function searchAll(query: string): Promise<SearchResult> {
   return invoke<SearchResult>('search_all', { query })
 }
+
+// ============================================================================
+// Google Drive Commands
+// ============================================================================
+
+export async function connectGdrive(): Promise<string> {
+  return invoke<string>('connect_gdrive')
+}
+
+export async function disconnectGdrive(): Promise<void> {
+  return invoke<void>('disconnect_gdrive')
+}
+
+export async function checkGdriveStatus(): Promise<string | null> {
+  return invoke<string | null>('check_gdrive_status')
+}
+
+export async function backupToGdrive(): Promise<string> {
+  return invoke<string>('backup_to_gdrive')
+}
+
+export async function restoreFromGdrive(fileId: string): Promise<void> {
+  return invoke<void>('restore_from_gdrive', { fileId })
+}
+
+export async function listBackupsOnGdrive(): Promise<[string, string][]> {
+  return invoke<[string, string][]>('list_backups_on_gdrive')
+}
+
+export async function shareSessionOnGdrive(sessionId: string): Promise<string> {
+  return invoke<string>('share_session_on_gdrive', { sessionId })
+}

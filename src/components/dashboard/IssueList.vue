@@ -47,4 +47,14 @@ defineEmits<{
 .max-width-text {
   max-width: 400px;
 }
+
+/* Ensure proper gutters and padding for transition-group with class v-row */
+.v-row {
+  --v-grid-gutters: 24px;
+  margin: -12px;
+}
+.v-col {
+  padding: 12px;
+}
 </style>
+

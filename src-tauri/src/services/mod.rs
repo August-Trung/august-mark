@@ -3,3 +3,5 @@ pub mod image_processor;
 pub mod screen_capture;
 pub mod export_service;
 pub mod mouse_hook;
+pub mod gdrive_client;
+pub mod backup_service;

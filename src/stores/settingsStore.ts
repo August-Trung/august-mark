@@ -1,10 +1,11 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import { getAllSettings, updateSetting } from '@/services/tauriCommands'
+import { getAllSettings, updateSetting, connectGdrive, disconnectGdrive, backupToGdrive, restoreFromGdrive, listBackupsOnGdrive } from '@/services/tauriCommands'
 
 export const useSettingsStore = defineStore('settings', () => {
   const settings = ref<Record<string, string>>({})
   const loading = ref(false)
+  const backupLoading = ref(false)
 
   async function loadSettings() {
     loading.value = true
@@ -78,6 +79,79 @@ export const useSettingsStore = defineStore('settings', () => {
     set: (value) => setSettingValue('gdrive_connected', value)
   })
 
+  const gdriveEmail = computed({
+    get: () => getSettingValue<string | null>('gdrive_user_email', null),
+    set: (value) => setSettingValue('gdrive_user_email', value)
+  })
+
+  const gdriveLastBackupTime = computed({
+    get: () => getSettingValue<string | null>('gdrive_last_backup_time', null),
+    set: (value) => setSettingValue('gdrive_last_backup_time', value)
+  })
+
+  async function connectGDrive() {
+    loading.value = true
+    try {
+      const email = await connectGdrive()
+      gdriveConnected.value = true
+      gdriveEmail.value = email
+    } catch (e) {
+      console.error('Failed to connect Google Drive:', e)
+      throw e
+    } finally {
+      loading.value = false
+    }
+  }
+
+  async function disconnectGDrive() {
+    loading.value = true
+    try {
+      await disconnectGdrive()
+      gdriveConnected.value = false
+      gdriveEmail.value = null
+    } catch (e) {
+      console.error('Failed to disconnect Google Drive:', e)
+      throw e
+    } finally {
+      loading.value = false
+    }
+  }
+
+  async function backupNow() {
+    backupLoading.value = true
+    try {
+      const time = await backupToGdrive()
+      gdriveLastBackupTime.value = time
+      return time
+    } catch (e) {
+      console.error('Failed to backup to Google Drive:', e)
+      throw e
+    } finally {
+      backupLoading.value = false
+    }
+  }
+
+  async function restoreFrom(fileId: string) {
+    backupLoading.value = true
+    try {
+      await restoreFromGdrive(fileId)
+    } catch (e) {
+      console.error('Failed to restore from Google Drive:', e)
+      throw e
+    } finally {
+      backupLoading.value = false
+    }
+  }
+
+  async function listBackups() {
+    try {
+      return await listBackupsOnGdrive()
+    } catch (e) {
+      console.error('Failed to list backups on Google Drive:', e)
+      throw e
+    }
+  }
+
   const minimizeToTray = computed({
     get: () => getSettingValue<boolean>('minimize_to_tray', false),
     set: (value) => setSettingValue('minimize_to_tray', value)
@@ -86,6 +160,7 @@ export const useSettingsStore = defineStore('settings', () => {
   return {
     settings,
     loading,
+    backupLoading,
     loadSettings,
     getSettingValue,
     setSettingValue,
@@ -96,6 +171,13 @@ export const useSettingsStore = defineStore('settings', () => {
     defaultProjectId,
     autoBackup,
     gdriveConnected,
+    gdriveEmail,
+    gdriveLastBackupTime,
+    connectGDrive,
+    disconnectGDrive,
+    backupNow,
+    restoreFrom,
+    listBackups,
     minimizeToTray
   }
 })
