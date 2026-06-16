@@ -11,26 +11,28 @@
       type="error"
       variant="tonal"
       class="mb-6"
-      title="Failed to load sessions"
+      :title="t('dashboardView.failedLoadSessions', 'Failed to load sessions')"
       :text="error"
     ></v-alert>
 
     <!-- Empty State -->
     <EmptyState
       v-else-if="sessions.length === 0"
-      title="No sessions yet"
-      description="There are no review sessions in this project. Create one below to organize your screen captures."
-      action-text="Create Review Session"
+      :title="t('dashboardView.noSessionsYet')"
+      :description="t('dashboardView.noSessionsYetSub')"
+      :action-text="t('dashboardView.createReviewSession')"
       @action="showCreateDialog = true"
     />
 
     <!-- Sort Toolbar -->
     <div v-else-if="sessions.length > 0" class="d-flex justify-end mb-4 align-center">
-      <span class="text-caption text-medium-emphasis mr-2">Sort by:</span>
+      <span class="text-caption text-medium-emphasis mr-2">{{ t('dashboardView.sortByLabel') }}</span>
       <div style="width: 220px;">
         <v-select
           v-model="sortBy"
           :items="sortOptions"
+          item-title="title"
+          item-value="value"
           density="compact"
           hide-details
           variant="solo-filled"
@@ -69,15 +71,15 @@
     <v-dialog v-model="showCreateDialog" max-width="500px">
       <v-card bg-color="surface" class="pa-4">
         <v-card-title class="text-h5 font-weight-bold px-0 text-primary">
-          New Review Session
+          {{ t('dashboardView.newReviewSession') }}
         </v-card-title>
         <v-card-text class="px-0 py-4">
           <v-form ref="form" v-model="isFormValid" @submit.prevent="handleCreate">
             <v-text-field
               v-model="sessionTitle"
-              label="Session Title"
-              placeholder="e.g. Homepage UI Audit"
-              :rules="[v => !!v || 'Session title is required']"
+              :label="t('dashboardView.sessionTitle')"
+              :placeholder="t('exportDialog.allIssues').includes('Tất cả') ? 'Ví dụ: Đánh giá trang chủ' : 'e.g. Homepage UI Audit'"
+              :rules="[v => !!v || t('dashboardView.sessionTitleRequired')]"
               variant="outlined"
               density="comfortable"
               class="mb-3"
@@ -86,8 +88,8 @@
 
             <v-textarea
               v-model="sessionDesc"
-              label="Description (Optional)"
-              placeholder="What are we reviewing in this session?"
+              :label="t('sidebar.projectDesc') + ' (' + t('sidebar.optional') + ')'"
+              :placeholder="t('dashboardView.sessionDescPlaceholder')"
               variant="outlined"
               density="comfortable"
               rows="3"
@@ -97,7 +99,7 @@
         <v-card-actions class="px-0">
           <v-spacer></v-spacer>
           <v-btn variant="text" color="medium-emphasis" class="text-none" @click="closeDialog">
-            Cancel
+            {{ t('common.cancel') }}
           </v-btn>
           <v-btn
             variant="elevated"
@@ -107,7 +109,7 @@
             :loading="isCreating"
             @click="handleCreate"
           >
-            Create
+            {{ t('common.create') }}
           </v-btn>
         </v-card-actions>
       </v-card>
@@ -116,9 +118,9 @@
     <!-- Delete Session Confirmation Dialog -->
     <ConfirmDialog
       v-model="showDeleteDialog"
-      title="Delete Session"
-      message="Are you sure you want to delete this session? All screenshots and issues inside will be permanently deleted."
-      confirm-text="Delete"
+      :title="t('dashboardView.deleteSessionTitle')"
+      :message="t('dashboardView.deleteSessionConfirmAll')"
+      :confirm-text="t('common.delete')"
       confirm-color="error"
       @confirm="executeDelete"
     />
@@ -127,15 +129,15 @@
     <v-dialog v-model="showRenameDialog" max-width="500px">
       <v-card bg-color="surface" class="pa-4">
         <v-card-title class="text-h5 font-weight-bold px-0 text-primary">
-          Rename Session
+          {{ t('dashboardView.renameSession', 'Rename Session') }}
         </v-card-title>
         <v-card-text class="px-0 py-4">
           <v-form ref="renameForm" v-model="isRenameFormValid" @submit.prevent="handleRenameSave">
             <v-text-field
               v-model="renameTitle"
-              label="Session Title"
-              placeholder="e.g. Homepage UI Audit"
-              :rules="[v => !!v || 'Session title is required']"
+              :label="t('dashboardView.sessionTitle')"
+              :placeholder="t('exportDialog.allIssues').includes('Tất cả') ? 'Ví dụ: Đánh giá trang chủ' : 'e.g. Homepage UI Audit'"
+              :rules="[v => !!v || t('dashboardView.sessionTitleRequired')]"
               variant="outlined"
               density="comfortable"
               class="mb-3"
@@ -144,8 +146,8 @@
 
             <v-textarea
               v-model="renameDesc"
-              label="Description (Optional)"
-              placeholder="What are we reviewing in this session?"
+              :label="t('sidebar.projectDesc') + ' (' + t('sidebar.optional') + ')'"
+              :placeholder="t('dashboardView.sessionDescPlaceholder')"
               variant="outlined"
               density="comfortable"
               rows="3"
@@ -155,7 +157,7 @@
         <v-card-actions class="px-0">
           <v-spacer></v-spacer>
           <v-btn variant="text" color="medium-emphasis" class="text-none" @click="closeRenameDialog">
-            Cancel
+            {{ t('common.cancel') }}
           </v-btn>
           <v-btn
             variant="elevated"
@@ -165,7 +167,7 @@
             :loading="isRenaming"
             @click="handleRenameSave"
           >
-            Save
+            {{ t('common.save') }}
           </v-btn>
         </v-card-actions>
       </v-card>
@@ -181,17 +183,19 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted, onUnmounted } from 'vue'
+import { ref, watch, onMounted, onUnmounted, computed } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useProjectStore } from '@/stores/projectStore'
 import { useSessionStore } from '@/stores/sessionStore'
 import { listenToEvent } from '@/services/tauriEvents'
+import { useI18n } from '@/composables/useI18n'
 import SessionCard from './SessionCard.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
 import ConfirmDialog from '@/components/common/ConfirmDialog.vue'
 import ExportDialog from '@/components/export/ExportDialog.vue'
 import type { Session } from '@/types/session'
 
+const { t } = useI18n()
 const projectStore = useProjectStore()
 const { activeProjectId } = storeToRefs(projectStore)
 
@@ -199,12 +203,12 @@ const sessionStore = useSessionStore()
 const { sessions, sortedSessions, sortBy, isLoading, error } = storeToRefs(sessionStore)
 const { fetchSessionsByProject, createSession, deleteSession, updateSession } = sessionStore
 
-const sortOptions = [
-  { title: 'Newest First', value: 'newest' },
-  { title: 'Oldest First', value: 'oldest' },
-  { title: 'Most Issues', value: 'issues_desc' },
-  { title: 'Status (Active First)', value: 'status' }
-]
+const sortOptions = computed(() => [
+  { title: t('sortOptions.newest'), value: 'newest' },
+  { title: t('sortOptions.oldest'), value: 'oldest' },
+  { title: t('sortOptions.issues_desc'), value: 'issues_desc' },
+  { title: t('sortOptions.status_active'), value: 'status' }
+])
 
 const showCreateDialog = ref(false)
 const isFormValid = ref(false)

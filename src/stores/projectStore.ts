@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { Project, CreateProjectPayload, UpdateProjectPayload } from '@/types/project'
 import { useUiStore } from './uiStore'
+import { useI18n } from '@/composables/useI18n'
 import {
   getProjects as apiGetProjects,
   createProject as apiCreateProject,
@@ -51,12 +52,14 @@ export const useProjectStore = defineStore('project', () => {
       const newProj = await apiCreateProject(payload)
       projects.value.push(newProj)
       activeProjectId.value = newProj.id
-      uiStore.showToast({ message: `Project "${newProj.name}" created successfully`, type: 'success' })
+      const { t } = useI18n()
+      uiStore.showToast({ message: t('toasts.projectCreated', { name: newProj.name }), type: 'success' })
       return newProj
     } catch (err: any) {
       const msg = err.message || String(err)
       error.value = msg
-      uiStore.showToast({ message: `Failed to create project: ${msg}`, type: 'error' })
+      const { t } = useI18n()
+      uiStore.showToast({ message: t('toasts.failedCreateProject', { msg }), type: 'error' })
       throw err
     } finally {
       uiStore.setLoading(false)
@@ -73,12 +76,14 @@ export const useProjectStore = defineStore('project', () => {
       if (index !== -1) {
         projects.value[index] = updatedProj
       }
-      uiStore.showToast({ message: `Project "${updatedProj.name}" updated`, type: 'success' })
+      const { t } = useI18n()
+      uiStore.showToast({ message: t('toasts.projectUpdated', { name: updatedProj.name }), type: 'success' })
       return updatedProj
     } catch (err: any) {
       const msg = err.message || String(err)
       error.value = msg
-      uiStore.showToast({ message: `Failed to update project: ${msg}`, type: 'error' })
+      const { t } = useI18n()
+      uiStore.showToast({ message: t('toasts.failedUpdateProject', { msg }), type: 'error' })
       throw err
     } finally {
       uiStore.setLoading(false)
@@ -96,11 +101,13 @@ export const useProjectStore = defineStore('project', () => {
       if (activeProjectId.value === id) {
         activeProjectId.value = projects.value[0]?.id || 'default'
       }
-      uiStore.showToast({ message: `Project "${projName}" deleted`, type: 'success' })
+      const { t } = useI18n()
+      uiStore.showToast({ message: t('toasts.projectDeleted', { name: projName }), type: 'success' })
     } catch (err: any) {
       const msg = err.message || String(err)
       error.value = msg
-      uiStore.showToast({ message: `Failed to delete project: ${msg}`, type: 'error' })
+      const { t } = useI18n()
+      uiStore.showToast({ message: t('toasts.failedDeleteProject', { msg }), type: 'error' })
       throw err
     } finally {
       uiStore.setLoading(false)

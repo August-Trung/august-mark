@@ -4,14 +4,14 @@
       <span class="session-badge">Session</span>
       <span class="session-name">{{ sessionName }}</span>
       <span class="divider"></span>
-      <span class="issue-count">{{ issueCount }} issues marked</span>
+      <span class="issue-count">{{ t('overlay.issuesMarked', { count: issueCount }) }}</span>
     </div>
     <div class="bar-right">
       <button
         type="button"
         class="btn-history mr-2"
         :disabled="!canUndo"
-        title="Undo (Ctrl+Z)"
+        :title="t('overlay.undo', 'Undo') + ' (Ctrl+Z)'"
         @click="overlayStore.undo()"
       >
         <i class="mdi mdi-undo"></i>
@@ -20,17 +20,17 @@
         type="button"
         class="btn-history mr-4"
         :disabled="!canRedo"
-        title="Redo (Ctrl+Y)"
+        :title="t('overlay.redo', 'Redo') + ' (Ctrl+Y)'"
         @click="overlayStore.redo()"
       >
         <i class="mdi mdi-redo"></i>
       </button>
 
       <button class="btn-cancel" @click="$emit('cancel')">
-        Cancel <kbd>Esc</kbd>
+        {{ t('overlay.discard') }} <kbd>Esc</kbd>
       </button>
       <button class="btn-done" @click="$emit('done')">
-        Done
+        {{ t('common.ok', 'Done') }}
       </button>
     </div>
   </div>
@@ -39,6 +39,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useOverlayStore } from '@/stores/overlayStore'
+import { useI18n } from '@/composables/useI18n'
 
 defineProps<{
   sessionName: string
@@ -51,6 +52,7 @@ defineEmits<{
 }>()
 
 const overlayStore = useOverlayStore()
+const { t } = useI18n()
 const canUndo = computed(() => overlayStore.undoStack.length > 0)
 const canRedo = computed(() => overlayStore.redoStack.length > 0)
 </script>

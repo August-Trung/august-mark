@@ -20,7 +20,7 @@
         />
         <!-- Loading placeholder while screenshot loads -->
         <div v-else class="loading-placeholder">
-          <span>{{ loadError || 'Loading screenshot...' }}</span>
+          <span>{{ loadError || t('overlay.loadingScreenshot') }}</span>
         </div>
       </div>
 
@@ -43,8 +43,10 @@ import AnnotationCanvas from '@/components/overlay/AnnotationCanvas.vue'
 import AnnotationToolbar from '@/components/overlay/AnnotationToolbar.vue'
 import IssueFormPanel from '@/components/overlay/IssueFormPanel.vue'
 import { useOverlayStore } from '@/stores/overlayStore'
+import { useI18n } from '@/composables/useI18n'
 import type { Capture } from '@/types/capture'
 
+const { t } = useI18n()
 const overlayStore = useOverlayStore()
 const annotationCanvasRef = ref<any>(null)
 
@@ -103,7 +105,7 @@ const loadCaptureDetails = async (id: string) => {
     }
   } catch (e) {
     console.error('[Overlay] Failed to load capture details:', e)
-    loadError.value = 'Failed to load screenshot. Press Esc to cancel.'
+    loadError.value = t('overlay.failedLoadScreenshot')
     await revealOverlay()
   }
 }
@@ -121,7 +123,7 @@ const handleScreenshotLoad = async () => {
 }
 
 const handleScreenshotError = async () => {
-  loadError.value = 'Failed to display screenshot. Press Esc to cancel.'
+  loadError.value = t('overlay.failedDisplayScreenshot')
   screenshotUrl.value = ''
   await revealOverlay()
 }

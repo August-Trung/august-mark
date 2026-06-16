@@ -8,7 +8,7 @@
     <v-card-item>
       <div class="d-flex align-center justify-space-between mb-2">
         <v-chip :color="statusColor" size="x-small" class="text-uppercase font-weight-bold">
-          {{ session.status }}
+          {{ t('statuses.' + session.status, session.status) }}
         </v-chip>
         <span class="text-caption text-medium-emphasis">
           {{ timeInfo }}
@@ -20,7 +20,7 @@
       </v-card-title>
 
       <v-card-subtitle class="pl-0 text-truncate text-medium-emphasis mb-4">
-        {{ session.description || 'No description provided' }}
+        {{ session.description || t('common.noDescription') }}
       </v-card-subtitle>
 
       <!-- Stats section -->
@@ -29,13 +29,13 @@
           <div class="text-h6 font-weight-bold text-primary">
             {{ session.captureCount || 0 }}
           </div>
-          <div class="text-caption text-medium-emphasis text-uppercase">Screenshots</div>
+          <div class="text-caption text-medium-emphasis text-uppercase">{{ t('common.screenshots', 'Screenshots') }}</div>
         </v-col>
         <v-col cols="6" class="text-center">
           <div class="text-h6 font-weight-bold text-secondary">
             {{ session.issueCount || 0 }}
           </div>
-          <div class="text-caption text-medium-emphasis text-uppercase">Issues</div>
+          <div class="text-caption text-medium-emphasis text-uppercase">{{ t('common.issues', 'Issues') }}</div>
         </v-col>
       </v-row>
     </v-card-item>
@@ -51,7 +51,7 @@
         prepend-icon="mdi-eye"
         @click="openSession"
       >
-        Open
+        {{ t('common.open', 'Open') }}
       </v-btn>
       
       <v-menu>
@@ -62,28 +62,28 @@
           <v-list-item
             v-if="session.status === 'active'"
             prepend-icon="mdi-check-circle"
-            title="Complete Session"
+            :title="t('dashboardView.deleteSessionConfirmAll', 'Complete Session').includes('Complete') ? 'Complete Session' : t('common.complete')"
             @click="$emit('complete', session.id)"
           ></v-list-item>
           <v-list-item
             v-else-if="session.status === 'completed'"
             prepend-icon="mdi-play-circle"
-            title="Mark as Active"
+            :title="t('sessionView.active')"
             @click="$emit('activate', session.id)"
           ></v-list-item>
           <v-list-item
             prepend-icon="mdi-pencil"
-            title="Rename Session"
+            :title="t('common.rename')"
             @click="$emit('rename', session)"
           ></v-list-item>
           <v-list-item
             prepend-icon="mdi-export"
-            title="Export Report"
+            :title="t('sessionView.exportReport')"
             @click="$emit('export', session)"
           ></v-list-item>
           <v-list-item
             prepend-icon="mdi-delete"
-            title="Delete Session"
+            :title="t('dashboardView.deleteSessionTitle')"
             class="text-error"
             @click="$emit('delete', session.id)"
           ></v-list-item>
@@ -98,11 +98,13 @@ import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { Session } from '@/types/session'
 import { formatRelativeTime, formatDate } from '@/utils/date'
+import { useI18n } from '@/composables/useI18n'
 
 const props = defineProps<{
   session: Session
 }>()
 
+const { t } = useI18n()
 const router = useRouter()
 
 const openSession = () => {
@@ -132,9 +134,9 @@ const statusColor = computed(() => {
 
 const timeInfo = computed(() => {
   if (props.session.status === 'completed' && props.session.completedAt) {
-    return `Completed ${formatDate(props.session.completedAt)}`
+    return `${t('sessionView.completed')} ${formatDate(props.session.completedAt)}`
   }
-  return `Started ${formatRelativeTime(props.session.createdAt)}`
+  return `${t('dashboardView.active')} ${formatRelativeTime(props.session.createdAt)}`
 })
 </script>
 

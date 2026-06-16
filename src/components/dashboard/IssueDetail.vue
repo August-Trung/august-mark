@@ -9,7 +9,7 @@
         color="medium-emphasis"
         @click="goBack"
       >
-        Back to Session
+        {{ t('issueDetail.backToSession') }}
       </v-btn>
 
       <div class="d-flex gap-2">
@@ -20,7 +20,7 @@
           class="text-none"
           @click="showExportDialog = true"
         >
-          AI Fix Context Pack
+          {{ t('issueDetail.aiFixPack') }}
         </v-btn>
 
         <v-btn
@@ -30,7 +30,7 @@
           class="text-none"
           @click="confirmDelete"
         >
-          Delete Issue
+          {{ t('issueDetail.deleteIssue') }}
         </v-btn>
       </div>
     </div>
@@ -41,7 +41,7 @@
       <v-col cols="12" md="8">
         <v-card bg-color="surface" variant="outlined" color="surface-variant" class="pa-4 mb-4">
           <div class="text-subtitle-1 font-weight-bold text-white mb-3">
-            Annotated Screenshot
+            {{ t('issueDetail.annotatedScreenshot', 'Annotated Screenshot') }}
           </div>
           <div class="screenshot-container bg-black rounded overflow-hidden">
             <v-img
@@ -63,7 +63,7 @@
         <!-- Crop Preview -->
         <v-card bg-color="surface" variant="outlined" color="surface-variant" class="pa-4">
           <div class="text-subtitle-1 font-weight-bold text-white mb-3">
-            Issue Crop (Zoomed View)
+            {{ t('issueDetail.issueCrop', 'Issue Crop (Zoomed View)') }}
           </div>
           <div class="crop-container d-flex align-center justify-center py-4 bg-grey-darken-4 rounded">
             <v-img
@@ -79,7 +79,7 @@
                 </div>
               </template>
             </v-img>
-            <div v-else class="text-caption text-medium-emphasis">No crop image generated</div>
+            <div v-else class="text-caption text-medium-emphasis">{{ t('issueDetail.noCropImage', 'No crop image generated') }}</div>
           </div>
         </v-card>
       </v-col>
@@ -89,7 +89,7 @@
         <v-card bg-color="surface" variant="outlined" color="surface-variant" class="pa-4 sticky-panel">
           <div class="d-flex align-center justify-space-between mb-4">
             <div class="text-subtitle-1 font-weight-bold text-white">
-              Issue Metadata
+              {{ t('issueDetail.issueMetadata', 'Issue Metadata') }}
             </div>
             <v-avatar color="primary" size="32" class="text-white font-weight-bold">
               {{ issue.markerNumber }}
@@ -101,7 +101,7 @@
             <!-- Title -->
             <v-text-field
               v-model="title"
-              label="Title"
+              :label="t('common.title')"
               variant="outlined"
               density="comfortable"
               class="mb-3"
@@ -111,7 +111,7 @@
             <!-- Issue Type -->
             <v-select
               v-model="issueType"
-              label="Type"
+              :label="t('common.type', 'Type')"
               :items="issueTypes"
               variant="outlined"
               density="comfortable"
@@ -122,7 +122,7 @@
             <!-- Severity -->
             <v-select
               v-model="severity"
-              label="Severity"
+              :label="t('common.severity')"
               :items="severities"
               variant="outlined"
               density="comfortable"
@@ -133,7 +133,7 @@
             <!-- Status -->
             <v-select
               v-model="status"
-              label="Status"
+              :label="t('common.status')"
               :items="statuses"
               variant="outlined"
               density="comfortable"
@@ -144,7 +144,7 @@
             <!-- Description -->
             <v-textarea
               v-model="description"
-              label="Description"
+              :label="t('common.description')"
               variant="outlined"
               density="comfortable"
               rows="6"
@@ -155,14 +155,14 @@
             <!-- Tags -->
             <v-combobox
               v-model="selectedTags"
-              label="Tags"
+              :label="t('issueDetail.tags', 'Tags')"
               :items="tagStore.tags.map(t => t.name)"
               variant="outlined"
               density="comfortable"
               multiple
               chips
               closable-chips
-              placeholder="Type tag and press Enter"
+              :placeholder="t('issueDetail.tagPlaceholder', 'Type tag and press Enter')"
               class="mb-3"
               @update:model-value="autoSave"
             ></v-combobox>
@@ -173,15 +173,15 @@
           <!-- System Details -->
           <div class="system-details text-caption text-medium-emphasis">
             <div class="d-flex justify-space-between mb-1">
-              <span>Created:</span>
+              <span>{{ t('sessionView.createdOn') }}:</span>
               <span>{{ formatDate(issue.createdAt) }}</span>
             </div>
             <div class="d-flex justify-space-between mb-1">
-              <span>Updated:</span>
+              <span>{{ t('issueDetail.updatedOn', 'Updated') }}:</span>
               <span>{{ formatDate(issue.updatedAt) }}</span>
             </div>
             <div class="d-flex justify-space-between">
-              <span>Color badge:</span>
+              <span>{{ t('issueDetail.colorBadge', 'Color badge') }}:</span>
               <span :style="{ color: issue.color }" class="font-weight-bold">
                 {{ issue.color }}
               </span>
@@ -211,6 +211,9 @@ import { getCapture, getSession } from '@/services/tauriCommands'
 import type { Issue } from '@/types/issue'
 import { formatDateTime as formatDate } from '@/utils/date'
 import ExportDialog from '@/components/export/ExportDialog.vue'
+import { useI18n } from '@/composables/useI18n'
+
+const { t } = useI18n()
 
 const props = defineProps<{
   issue: Issue

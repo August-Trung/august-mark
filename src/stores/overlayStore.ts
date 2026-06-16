@@ -3,6 +3,7 @@ import { ref } from 'vue'
 import type { Annotation } from '@/types/annotation'
 import { saveCaptureAnnotations } from '@/services/tauriCommands'
 import { useUiStore } from './uiStore'
+import { useI18n } from '@/composables/useI18n'
 
 export interface HistoryAction {
   type: 'add' | 'delete'
@@ -173,11 +174,13 @@ export const useOverlayStore = defineStore('overlay', () => {
       uiStore.setLoading(true)
       await saveCaptureAnnotations(captureId.value, payloads, annotatedBase64)
       reset()
-      uiStore.showToast({ message: 'Annotations saved successfully', type: 'success' })
+      const { t } = useI18n()
+      uiStore.showToast({ message: t('toasts.annotationsSaved'), type: 'success' })
     } catch (e: any) {
       console.error('[OverlayStore] Failed to save annotations:', e)
       const uiStore = useUiStore()
-      uiStore.showToast({ message: `Failed to save annotations: ${e?.message || e}`, type: 'error' })
+      const { t } = useI18n()
+      uiStore.showToast({ message: t('toasts.failedSaveAnnotations', { msg: e?.message || String(e) }), type: 'error' })
       throw e
     } finally {
       const uiStore = useUiStore()

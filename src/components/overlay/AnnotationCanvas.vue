@@ -27,7 +27,7 @@
         ref="textInputRef"
         v-model="textInputState.text"
         type="text"
-        placeholder="Type feedback..."
+        :placeholder="t('overlay.typeFeedback')"
         class="floating-text-input"
         @keydown.enter="commitTextInput"
         @keydown.esc="cancelTextInput"
@@ -41,7 +41,7 @@
       :style="{ left: contextMenuState.x + 'px', top: contextMenuState.y + 'px' }"
     >
       <button class="context-menu-item" @click="deleteSelected">
-        <i class="mdi mdi-delete-outline mr-1"></i> Xóa nét vẽ
+        <i class="mdi mdi-delete-outline mr-1"></i> {{ t('overlay.eraseStroke') }}
       </button>
     </div>
   </div>
@@ -53,6 +53,7 @@ import { useCanvas } from '@/composables/useCanvas'
 import { useAnnotation } from '@/composables/useAnnotation'
 import { loadImage } from '@/utils/image'
 import { useOverlayStore } from '@/stores/overlayStore'
+import { useI18n } from '@/composables/useI18n'
 
 const props = defineProps<{
   screenshotUrl: string
@@ -62,6 +63,8 @@ const emit = defineEmits<{
   (e: 'load'): void
   (e: 'error', message: string): void
 }>()
+
+const { t } = useI18n()
 
 const containerRef = ref<HTMLDivElement | null>(null)
 const screenshotCanvasRef = ref<HTMLCanvasElement | null>(null)

@@ -15,15 +15,15 @@
 
           <v-card-text class="px-0 text-body-1 text-medium-emphasis">
             <p class="mb-4">
-              <strong>August Mark</strong> is a professional offline-first screen annotation and markup desktop application designed for designers, developers, and QA engineers. It streamlines bug reporting and layout feedback by letting you capture, draw annotations, and export complete reports instantly.
+              {{ t('aboutView.aboutDesc1') }}
             </p>
             <p class="mb-6">
-              This application is built using a state-of-the-art stack: <strong>Tauri 2</strong> for the native window management shell, <strong>Rust</strong> for fast and secure background processing, <strong>Vue 3 + Vuetify 3</strong> for the user interface, and <strong>SQLite</strong> for structured local data persistence.
+              {{ t('aboutView.aboutDesc2') }}
             </p>
 
             <v-divider class="my-6"></v-divider>
 
-            <h3 class="text-h6 font-weight-bold text-white mb-4">Application Statistics</h3>
+            <h3 class="text-h6 font-weight-bold text-white mb-4">{{ t('aboutView.appStats') }}</h3>
             <v-row>
               <v-col cols="12" sm="4" v-for="stat in statCards" :key="stat.title">
                 <v-card border variant="flat" class="pa-4 bg-surface-variant d-flex align-center gap-3">
@@ -40,7 +40,7 @@
 
             <v-divider class="my-6"></v-divider>
 
-            <h3 class="text-h6 font-weight-bold text-white mb-4">Tech Stack & Credits</h3>
+            <h3 class="text-h6 font-weight-bold text-white mb-4">{{ t('aboutView.techStack') }}</h3>
             <div class="d-flex flex-wrap gap-2">
               <v-chip variant="outlined" color="primary">Tauri 2.0</v-chip>
               <v-chip variant="outlined" color="secondary">Rust 1.77+</v-chip>
@@ -53,10 +53,10 @@
 
           <v-card-actions class="px-0 pt-6">
             <v-btn color="primary" variant="elevated" to="/" prepend-icon="mdi-arrow-left" class="text-none px-6">
-              Back to Dashboard
+              {{ t('aboutView.backToDashboard') }}
             </v-btn>
             <v-btn color="medium-emphasis" variant="text" to="/settings" prepend-icon="mdi-cog" class="text-none px-4">
-              Open Settings
+              {{ t('aboutView.openSettings') }}
             </v-btn>
           </v-card-actions>
         </v-card>
@@ -69,7 +69,9 @@
 import { ref, onMounted, computed } from 'vue'
 import { getVersion } from '@tauri-apps/api/app'
 import { invoke } from '@tauri-apps/api/core'
+import { useI18n } from '@/composables/useI18n'
 
+const { t } = useI18n()
 const appVersion = ref('Loading...')
 const stats = ref({
   projects: 0,
@@ -78,9 +80,9 @@ const stats = ref({
 })
 
 const statCards = computed(() => [
-  { title: 'Projects', value: stats.value.projects, icon: 'mdi-folder', color: 'primary' },
-  { title: 'Sessions', value: stats.value.sessions, icon: 'mdi-clipboard-list', color: 'secondary' },
-  { title: 'Issues Logged', value: stats.value.issues, icon: 'mdi-alert-circle', color: 'error' }
+  { title: t('aboutView.totalProjects', 'Projects'), value: stats.value.projects, icon: 'mdi-folder', color: 'primary' },
+  { title: t('aboutView.totalSessions', 'Sessions'), value: stats.value.sessions, icon: 'mdi-clipboard-list', color: 'secondary' },
+  { title: t('aboutView.issuesLogged', 'Issues Logged'), value: stats.value.issues, icon: 'mdi-alert-circle', color: 'error' }
 ])
 
 onMounted(async () => {

@@ -3,13 +3,13 @@
     <v-card class="export-dialog-card pa-4">
       <v-card-title class="d-flex align-center pb-2 border-bottom">
         <v-icon color="secondary" class="mr-2">mdi-export</v-icon>
-        <span class="text-h6 font-weight-bold text-white">Export Center</span>
+        <span class="text-h6 font-weight-bold text-white">{{ t('exportDialog.exportCenter') }}</span>
       </v-card-title>
 
       <!-- Tabs Header -->
       <v-tabs v-model="activeTab" bg-color="transparent" color="secondary" class="border-bottom mb-4" grow>
-        <v-tab value="standard" class="text-none">Standard Report</v-tab>
-        <v-tab value="aacp" class="text-none">AI Agent Context Pack (AACP)</v-tab>
+        <v-tab value="standard" class="text-none">{{ t('exportDialog.standardReport') }}</v-tab>
+        <v-tab value="aacp" class="text-none">{{ t('exportDialog.aacpTab') }}</v-tab>
       </v-tabs>
 
       <v-card-text class="pa-0 pt-2">
@@ -29,7 +29,7 @@
               <v-select
                 v-model="selectedFormat"
                 :items="formats"
-                label="Export Format"
+                :label="t('exportDialog.exportFormat')"
                 variant="outlined"
                 density="comfortable"
                 class="mb-4"
@@ -37,7 +37,7 @@
 
               <!-- Severity Filter -->
               <div class="mb-4">
-                <span class="text-subtitle-2 text-white d-block mb-1 font-weight-medium">Include Severities</span>
+                <span class="text-subtitle-2 text-white d-block mb-1 font-weight-medium">{{ t('exportDialog.includeSeverities') }}</span>
                 <div class="d-flex flex-wrap">
                   <v-checkbox
                     v-for="sev in severityOptions"
@@ -55,7 +55,7 @@
 
               <!-- Status Filter -->
               <div class="mb-4">
-                <span class="text-subtitle-2 text-white d-block mb-1 font-weight-medium">Include Statuses</span>
+                <span class="text-subtitle-2 text-white d-block mb-1 font-weight-medium">{{ t('exportDialog.includeStatuses') }}</span>
                 <div class="d-flex flex-wrap">
                   <v-checkbox
                     v-for="stat in statusOptions"
@@ -76,13 +76,13 @@
           <!-- Tab 2: AACP (AI Agent) -->
           <v-window-item value="aacp" class="pa-1">
             <p class="text-body-2 text-medium-emphasis mb-4">
-              Generate a package of codebase Git status, suspected files, and screenshots designed for AI Coding Agents to analyze and fix the bugs.
+              {{ t('exportDialog.aacpDesc') }}
             </p>
 
             <div v-if="!isExporting && !statusMessage">
               <!-- Step 1: Issue Dropdown -->
               <div class="text-subtitle-2 text-white mb-2 font-weight-medium">
-                1. Select Issue
+                {{ t('exportDialog.selectIssue') }}
               </div>
               <v-select
                 v-model="selectedIssueId"
@@ -97,12 +97,12 @@
 
               <!-- Step 2: Workspace Path Picker -->
               <div class="text-subtitle-2 text-white mb-2 font-weight-medium mt-3">
-                2. Target Workspace Path (Local repository)
+                {{ t('exportDialog.targetWorkspace') }}
               </div>
               <div class="d-flex align-center gap-2 mb-4">
                 <v-text-field
                   v-model="workspacePath"
-                  placeholder="e.g. C:/Projects/my-app"
+                  :placeholder="t('exportDialog.workspacePlaceholder')"
                   variant="outlined"
                   density="comfortable"
                   hide-details
@@ -115,18 +115,18 @@
                   class="text-none"
                   @click="pickWorkspaceDirectory"
                 >
-                  Browse
+                  {{ t('common.browse') }}
                 </v-btn>
               </div>
 
               <!-- Step 3: Suspected Files Textarea -->
               <div class="text-subtitle-2 text-white mb-2 font-weight-medium mt-3 d-flex justify-space-between align-center">
-                <span>3. Suspected Files</span>
-                <span class="text-caption text-medium-emphasis font-weight-regular">Optional</span>
+                <span>{{ t('exportDialog.suspectedFiles') }}</span>
+                <span class="text-caption text-medium-emphasis font-weight-regular">{{ t('sidebar.optional') }}</span>
               </div>
               <v-textarea
                 v-model="suspectedFilesText"
-                placeholder="e.g. src/components/Sidebar.vue (Leave empty if unsure)"
+                :placeholder="t('exportDialog.suspectedPlaceholder')"
                 variant="outlined"
                 density="comfortable"
                 rows="2"
@@ -137,7 +137,7 @@
               <!-- ZIP Option -->
               <v-checkbox
                 v-model="compressZip"
-                label="Compress context pack to ZIP (.zip)"
+                :label="t('exportDialog.zipOption')"
                 density="compact"
                 color="secondary"
                 class="mb-2 mt-2"
@@ -146,12 +146,12 @@
 
               <!-- Step 4: Output Save Directory -->
               <div class="text-subtitle-2 text-white mb-2 font-weight-medium mt-3">
-                4. Save Context Pack to (Destination)
+                {{ t('exportDialog.saveDestination') }}
               </div>
               <div class="d-flex align-center gap-2 mb-4">
                 <v-text-field
                   v-model="outputDir"
-                  placeholder="Select where to save the context pack"
+                  :placeholder="t('exportDialog.destinationPlaceholder')"
                   variant="outlined"
                   density="comfortable"
                   hide-details
@@ -164,7 +164,7 @@
                   class="text-none"
                   @click="pickOutputDirectory"
                 >
-                  Browse
+                  {{ t('common.browse') }}
                 </v-btn>
               </div>
             </div>
@@ -174,7 +174,7 @@
         <!-- Loading State / Success Status -->
         <div v-if="isExporting" class="d-flex flex-column align-center justify-center py-8">
           <v-progress-circular indeterminate color="secondary" class="mb-2"></v-progress-circular>
-          <span class="text-caption text-secondary">Generating package...</span>
+          <span class="text-caption text-secondary">{{ t('exportDialog.generating') }}</span>
         </div>
 
         <!-- Inline Status Alerts -->
@@ -198,7 +198,7 @@
           :disabled="isExporting"
           @click="close"
         >
-          Close
+          {{ t('common.close') }}
         </v-btn>
         
         <template v-if="!isExporting && !statusMessage">
@@ -212,7 +212,7 @@
             :disabled="isExportDisabled"
             @click="handleExport"
           >
-            Choose Save Path
+            {{ t('exportDialog.chooseSavePath', 'Choose Save Path') }}
           </v-btn>
 
           <!-- AACP Export Button -->
@@ -225,7 +225,7 @@
             :disabled="isAacpExportDisabled"
             @click="handleAacpExport"
           >
-            Export Context Pack
+            {{ t('exportDialog.exportContextPack', 'Export Context Pack') }}
           </v-btn>
         </template>
       </v-card-actions>
@@ -239,6 +239,9 @@ import { save, open } from '@tauri-apps/plugin-dialog'
 import { exportSession, exportAacpPack, getDownloadDir } from '@/services/tauriCommands'
 import { useIssueStore } from '@/stores/issueStore'
 import { useSettingsStore } from '@/stores/settingsStore'
+import { useI18n } from '@/composables/useI18n'
+
+const { t } = useI18n()
 
 const props = defineProps<{
   modelValue: boolean
@@ -296,7 +299,7 @@ const issuesList = computed(() => {
   }))
   list.unshift({
     id: 'all',
-    displayName: 'All Issues in this Session'
+    displayName: t('exportDialog.allIssues')
   })
   return list
 })

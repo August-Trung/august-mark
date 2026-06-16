@@ -9,10 +9,10 @@
           <div class="d-flex align-center mb-6">
             <div>
               <h1 class="text-h4 font-weight-bold text-white mb-1">
-                Sessions
+                {{ t('dashboardView.sessionsTab') }}
               </h1>
               <p class="text-subtitle-1 text-medium-emphasis">
-                Manage and review screenshot markups in this project
+                {{ t('dashboardView.sessionsSubtitle', 'Manage and review screenshot markups in this project') }}
               </p>
             </div>
             <v-spacer></v-spacer>
@@ -23,7 +23,7 @@
               class="text-none"
               @click="triggerNewSession"
             >
-              New Session
+              {{ t('dashboardView.createSession') }}
             </v-btn>
           </div>
 
@@ -39,7 +39,9 @@
 import { ref } from 'vue'
 import AppHeader from '@/components/common/AppHeader.vue'
 import SessionList from '@/components/dashboard/SessionList.vue'
+import { useI18n } from '@/composables/useI18n'
 
+const { t } = useI18n()
 const sessionList = ref<InstanceType<typeof SessionList> | null>(null)
 
 function triggerNewSession() {
