@@ -2,6 +2,23 @@
 
 All notable changes to the August Mark project will be documented in this file.
 
+## [0.1.1] - 2026-06-16
+
+This release introduces advanced dashboard features, issue tag metadata, and multi-format exporters.
+
+### Added
+- **Tagging System**: Add, edit, and assign color-coded tag metadata to issues during captures and on the dashboard.
+- **Tag Filtering**: Filter issues on the dashboard reactively by one or more selected tags.
+- **Global Autocomplete Search**: Quick search session and issue titles/descriptions via a case-insensitive search bar in the app header.
+- **List Sorting**: Sort session cards (by date, issue count, active status) and issue cards (by date, severity, status).
+- **Multi-format Report Exporter**: Export reports in CSV, Markdown (portable image folders), PDF, or standard HTML, with active status and severity filters.
+- **UI transitions**: Smooth global route navigation fade effects and fade & scale transitions for list items entering/sorting.
+
+### Fixed
+- **Edge Headless PDF Printing**: Configured Microsoft Edge executable resolver and corrected `.tmp.html` extension format to print clean reports instead of source code.
+- **Contrast accessibility**: Global input/placeholder text overrides and visible label styling across dark/light themes.
+- **Virtual Scroll Autocomplete Crash**: Implemented safety checks (optional chaining) and delayed input resets inside autocomplete slots to avoid Vue VNode unmount exceptions.
+
 ## [0.1.0] - 2026-06-16
 
 This is the initial MVP release of **August Mark**, a lightweight offline-first review and annotation tool.

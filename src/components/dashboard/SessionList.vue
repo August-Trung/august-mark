@@ -41,7 +41,12 @@
     </div>
 
     <!-- Sessions Grid -->
-    <v-row v-if="sessions.length > 0">
+    <transition-group
+      v-if="sessions.length > 0"
+      name="list"
+      tag="div"
+      class="v-row"
+    >
       <v-col
         v-for="session in sortedSessions"
         :key="session.id"
@@ -58,7 +63,7 @@
           @export="openExportDialog"
         />
       </v-col>
-    </v-row>
+    </transition-group>
 
     <!-- Create Session Dialog -->
     <v-dialog v-model="showCreateDialog" max-width="500px">

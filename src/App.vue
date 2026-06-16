@@ -4,7 +4,11 @@
     <AppSidebar />
 
     <v-main>
-      <router-view />
+      <router-view v-slot="{ Component }">
+        <v-fade-transition mode="out-in">
+          <component :is="Component" />
+        </v-fade-transition>
+      </router-view>
     </v-main>
 
     <!-- Global Snackbar for Toasts -->

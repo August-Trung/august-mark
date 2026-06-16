@@ -10,7 +10,12 @@
     </div>
 
     <!-- Issues Grid -->
-    <v-row v-else>
+    <transition-group
+      v-else
+      name="list"
+      tag="div"
+      class="v-row"
+    >
       <v-col
         v-for="issue in issues"
         :key="issue.id"
@@ -21,7 +26,7 @@
       >
         <IssueCard :issue="issue" @delete="$emit('delete', $event)" />
       </v-col>
-    </v-row>
+    </transition-group>
   </div>
 </template>
 

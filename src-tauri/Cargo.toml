@@ -1,6 +1,6 @@
 [package]
 name = "august-mark"
-version = "0.1.0"
+version = "0.1.1"
 description = "August Mark — Mark everything, review later."
 authors = []
 edition = "2021"
