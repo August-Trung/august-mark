@@ -2,6 +2,20 @@
 
 All notable changes to the August Mark project will be documented in this file.
 
+## [0.2.0] - 2026-06-16
+
+This release introduces Google Drive cloud backups, public report sharing, the AI Agent Context Pack (AACP) exporter engine, and full English & Vietnamese localization.
+
+### Added
+- **Google Drive Cloud Sync**: Connect Google account via OAuth2 loopback server in Tauri backend. Back up SQLite database and media folders (screenshots, crops) directly to Google Drive, and restore database from selected cloud backups.
+- **Interactive Cloud Share**: Export session reports as PDFs, upload to Google Drive under a public read permission, and copy a public shareable URL.
+- **AI Agent Context Pack (AACP) Exporter**: Bundle issue descriptions, crops, screenshots, suspected files, and local Git repository details (current branch, commit hash, and uncommitted changes) into a zip context package optimized for AI Coding Agents.
+- **Comprehensive English & Vietnamese i18n Localization**: Select language setting to instantly translate all views, toolbars, dialogs, empty states, and toast notifications reactively.
+
+### Fixed
+- **Grid Layout Spacing**: Fixed card spacing in lists on the dashboard.
+- **Filter Tag Selectors**: Localized filter option chips and sorting labels in dashboard view.
+
 ## [0.1.1] - 2026-06-16
 
 This release introduces advanced dashboard features, issue tag metadata, and multi-format exporters.
