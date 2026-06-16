@@ -233,6 +233,106 @@ export function useCanvas() {
     ctx.restore()
   }
 
+  /**
+   * Renders a freehand drawing stroke.
+   */
+  const renderFreeDraw = (
+    ctx: CanvasRenderingContext2D,
+    points: { x: number; y: number }[],
+    color = '#FF6B35',
+    strokeWidth = 3
+  ) => {
+    if (points.length < 1) return
+    ctx.save()
+    ctx.strokeStyle = color
+    ctx.lineWidth = strokeWidth
+    ctx.lineCap = 'round'
+    ctx.lineJoin = 'round'
+    ctx.setLineDash([])
+
+    ctx.beginPath()
+    ctx.moveTo(points[0].x, points[0].y)
+    for (let i = 1; i < points.length; i++) {
+      ctx.lineTo(points[i].x, points[i].y)
+    }
+    ctx.stroke()
+    ctx.restore()
+  }
+
+  /**
+   * Renders a yellow highlight block.
+   */
+  const renderHighlight = (
+    ctx: CanvasRenderingContext2D,
+    x: number,
+    y: number,
+    width: number,
+    height: number,
+    isPending: boolean,
+    color = 'rgba(255, 235, 59, 0.35)'
+  ) => {
+    ctx.save()
+    ctx.fillStyle = color
+    ctx.fillRect(x, y, width, height)
+
+    // Draw a border for visual feedback
+    ctx.strokeStyle = 'rgba(255, 235, 59, 0.6)'
+    ctx.lineWidth = 1.5
+    if (isPending) {
+      ctx.setLineDash([6, 3])
+    } else {
+      ctx.setLineDash([])
+    }
+    ctx.strokeRect(x, y, width, height)
+    ctx.restore()
+  }
+
+  /**
+   * Renders a pixelated/mosaic blur effect over a region.
+   */
+  const renderBlur = (
+    ctx: CanvasRenderingContext2D,
+    x: number,
+    y: number,
+    width: number,
+    height: number,
+    img: HTMLImageElement | HTMLCanvasElement | null
+  ) => {
+    if (!img || width <= 0 || height <= 0) return
+    ctx.save()
+
+    // Create a temporary offscreen canvas for fast pixelation
+    const offscreen = document.createElement('canvas')
+    const blockSize = 8
+    offscreen.width = Math.max(1, Math.round(width / blockSize))
+    offscreen.height = Math.max(1, Math.round(height / blockSize))
+
+    const offCtx = offscreen.getContext('2d')
+    if (offCtx) {
+      offCtx.imageSmoothingEnabled = false
+      offCtx.drawImage(
+        img,
+        x, y, width, height,
+        0, 0, offscreen.width, offscreen.height
+      )
+
+      ctx.imageSmoothingEnabled = false
+      ctx.drawImage(
+        offscreen,
+        0, 0, offscreen.width, offscreen.height,
+        x, y, width, height
+      )
+      ctx.imageSmoothingEnabled = true
+    }
+
+    // Draw dashed border to define the blurred boundary
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)'
+    ctx.lineWidth = 1
+    ctx.setLineDash([4, 4])
+    ctx.strokeRect(x, y, width, height)
+    ctx.restore()
+  }
+
   return {
     initCanvas,
     getCanvasCoords,
@@ -242,5 +342,8 @@ export function useCanvas() {
     renderRect,
     renderArrow,
     renderText,
+    renderFreeDraw,
+    renderHighlight,
+    renderBlur,
   }
 }

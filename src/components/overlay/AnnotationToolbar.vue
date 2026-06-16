@@ -47,6 +47,42 @@
       <i class="mdi mdi-numeric-4-circle-outline"></i>
       <span class="btn-label">Text</span>
     </button>
+
+    <!-- Blur Tool -->
+    <button
+      type="button"
+      class="toolbar-btn"
+      :class="{ active: activeTool === 'blur' }"
+      title="Blur Tool (5)"
+      @click="toggleTool('blur')"
+    >
+      <i class="mdi mdi-numeric-5-circle-outline"></i>
+      <span class="btn-label">Blur</span>
+    </button>
+
+    <!-- Freehand Tool -->
+    <button
+      type="button"
+      class="toolbar-btn"
+      :class="{ active: activeTool === 'freedraw' }"
+      title="Freehand Tool (6)"
+      @click="toggleTool('freedraw')"
+    >
+      <i class="mdi mdi-numeric-6-circle-outline"></i>
+      <span class="btn-label">Freehand</span>
+    </button>
+
+    <!-- Highlight Tool -->
+    <button
+      type="button"
+      class="toolbar-btn"
+      :class="{ active: activeTool === 'highlight' }"
+      title="Highlight Tool (7)"
+      @click="toggleTool('highlight')"
+    >
+      <i class="mdi mdi-numeric-7-circle-outline"></i>
+      <span class="btn-label">Highlight</span>
+    </button>
   </div>
 </template>
 
@@ -57,7 +93,7 @@ import { useOverlayStore } from '@/stores/overlayStore'
 const overlayStore = useOverlayStore()
 const activeTool = computed(() => overlayStore.activeTool)
 
-const toggleTool = (tool: 'marker' | 'rect' | 'arrow' | 'text') => {
+const toggleTool = (tool: 'marker' | 'rect' | 'arrow' | 'text' | 'blur' | 'freedraw' | 'highlight') => {
   if (overlayStore.activeTool === tool) {
     overlayStore.setTool(null)
   } else {

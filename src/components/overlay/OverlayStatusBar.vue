@@ -7,6 +7,25 @@
       <span class="issue-count">{{ issueCount }} issues marked</span>
     </div>
     <div class="bar-right">
+      <button
+        type="button"
+        class="btn-history mr-2"
+        :disabled="!canUndo"
+        title="Undo (Ctrl+Z)"
+        @click="overlayStore.undo()"
+      >
+        <i class="mdi mdi-undo"></i>
+      </button>
+      <button
+        type="button"
+        class="btn-history mr-4"
+        :disabled="!canRedo"
+        title="Redo (Ctrl+Y)"
+        @click="overlayStore.redo()"
+      >
+        <i class="mdi mdi-redo"></i>
+      </button>
+
       <button class="btn-cancel" @click="$emit('cancel')">
         Cancel <kbd>Esc</kbd>
       </button>
@@ -18,6 +37,9 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
+import { useOverlayStore } from '@/stores/overlayStore'
+
 defineProps<{
   sessionName: string
   issueCount: number
@@ -27,6 +49,10 @@ defineEmits<{
   (e: 'cancel'): void
   (e: 'done'): void
 }>()
+
+const overlayStore = useOverlayStore()
+const canUndo = computed(() => overlayStore.undoStack.length > 0)
+const canRedo = computed(() => overlayStore.redoStack.length > 0)
 </script>
 
 <style scoped>
@@ -148,5 +174,38 @@ kbd {
   font-size: 0.72rem;
   color: rgba(232, 232, 232, 0.75);
   vertical-align: middle;
+}
+
+.btn-history {
+  background: transparent;
+  border: none;
+  color: #E8E8E8;
+  font-size: 1.25rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.btn-history:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+}
+
+.btn-history:disabled {
+  color: rgba(232, 232, 232, 0.25);
+  cursor: not-allowed;
+}
+
+.mr-2 {
+  margin-right: 8px;
+}
+
+.mr-4 {
+  margin-right: 16px;
 }
 </style>

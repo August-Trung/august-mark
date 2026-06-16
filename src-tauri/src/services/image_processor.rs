@@ -43,6 +43,25 @@ enum AnnotationItem {
         number: i32,
         color: String,
     },
+    Blur {
+        topLeft: Point,
+        width: f64,
+        height: f64,
+        number: i32,
+        color: String,
+    },
+    Highlight {
+        topLeft: Point,
+        width: f64,
+        height: f64,
+        number: i32,
+        color: String,
+    },
+    Freedraw {
+        points: Vec<Point>,
+        number: i32,
+        color: String,
+    },
 }
 
 #[derive(Debug, serde::Deserialize)]
@@ -182,6 +201,102 @@ fn draw_rectangle(
     }
 }
 
+/// Draw a translucent yellow highlight box with alpha blending.
+fn draw_highlight(img: &mut RgbaImage, x: i32, y: i32, w: i32, h: i32) {
+    let alpha = 0.35;
+    let hr = 255;
+    let hg = 235;
+    let hb = 59;
+    
+    let img_w = img.width() as i32;
+    let img_h = img.height() as i32;
+    
+    for py in y..(y + h) {
+        for px in x..(x + w) {
+            if px >= 0 && px < img_w && py >= 0 && py < img_h {
+                let current_pixel = img.get_pixel(px as u32, py as u32);
+                let r = (current_pixel[0] as f64 * (1.0 - alpha) + hr as f64 * alpha) as u8;
+                let g = (current_pixel[1] as f64 * (1.0 - alpha) + hg as f64 * alpha) as u8;
+                let b = (current_pixel[2] as f64 * (1.0 - alpha) + hb as f64 * alpha) as u8;
+                img.put_pixel(px as u32, py as u32, Rgba([r, g, b, 255]));
+            }
+        }
+    }
+    
+    // Draw highlight outline border with 0.6 opacity
+    let border_alpha = 0.6;
+    let draw_border_pixel = |img: &mut RgbaImage, px: i32, py: i32| {
+        if px >= 0 && px < img_w && py >= 0 && py < img_h {
+            let current_pixel = img.get_pixel(px as u32, py as u32);
+            let r = (current_pixel[0] as f64 * (1.0 - border_alpha) + hr as f64 * border_alpha) as u8;
+            let g = (current_pixel[1] as f64 * (1.0 - border_alpha) + hg as f64 * border_alpha) as u8;
+            let b = (current_pixel[2] as f64 * (1.0 - border_alpha) + hb as f64 * border_alpha) as u8;
+            img.put_pixel(px as u32, py as u32, Rgba([r, g, b, 255]));
+        }
+    };
+    
+    for px in x..=(x + w) {
+        draw_border_pixel(img, px, y);
+        draw_border_pixel(img, px, y + h);
+    }
+    for py in y..=(y + h) {
+        draw_border_pixel(img, x, py);
+        draw_border_pixel(img, x + w, py);
+    }
+}
+
+/// Draw a mosaic/pixelated region over a bounding box.
+fn draw_pixelate(img: &mut RgbaImage, x: i32, y: i32, w: i32, h: i32) {
+    let block_size = 8;
+    let img_w = img.width() as i32;
+    let img_h = img.height() as i32;
+    
+    for by in (y..(y + h)).step_by(block_size as usize) {
+        for bx in (x..(x + w)).step_by(block_size as usize) {
+            let mut sum_r: u64 = 0;
+            let mut sum_g: u64 = 0;
+            let mut sum_b: u64 = 0;
+            let mut count: u64 = 0;
+            
+            for dy in 0..block_size {
+                for dx in 0..block_size {
+                    let px = bx + dx;
+                    let py = by + dy;
+                    if px >= x && px < x + w && py >= y && py < y + h {
+                        if px >= 0 && px < img_w && py >= 0 && py < img_h {
+                            let p = img.get_pixel(px as u32, py as u32);
+                            sum_r += p[0] as u64;
+                            sum_g += p[1] as u64;
+                            sum_b += p[2] as u64;
+                            count += 1;
+                        }
+                    }
+                }
+            }
+            
+            if count > 0 {
+                let avg_r = (sum_r / count) as u8;
+                let avg_g = (sum_g / count) as u8;
+                let avg_b = (sum_b / count) as u8;
+                let avg_color = Rgba([avg_r, avg_g, avg_b, 255]);
+                
+                for dy in 0..block_size {
+                    for dx in 0..block_size {
+                        let px = bx + dx;
+                        let py = by + dy;
+                        if px >= x && px < x + w && py >= y && py < y + h {
+                            if px >= 0 && px < img_w && py >= 0 && py < img_h {
+                                img.put_pixel(px as u32, py as u32, avg_color);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+
 /// Helper to render the standard orange marker badge.
 fn render_marker_badge(img: &mut RgbaImage, cx: i32, cy: i32, number: i32, color: Rgba<u8>) {
     // 1. Draw solid orange circle (radius 15)
@@ -285,6 +400,43 @@ pub fn draw_annotations_to_rgba(
                 let badge_x = (position.x - 20.0) as i32;
                 let badge_y = (position.y + 12.0) as i32;
                 render_marker_badge(&mut img, badge_x, badge_y, number, color_rgba);
+            }
+            AnnotationItem::Blur { topLeft, width, height, number, color } => {
+                let color_rgba = parse_hex_color(&color);
+                let x = topLeft.x as i32;
+                let y = topLeft.y as i32;
+                let w = width as i32;
+                let h = height as i32;
+
+                draw_pixelate(&mut img, x, y, w, h);
+                render_marker_badge(&mut img, x, y - 20, number, color_rgba);
+            }
+            AnnotationItem::Highlight { topLeft, width, height, number, color } => {
+                let color_rgba = parse_hex_color(&color);
+                let x = topLeft.x as i32;
+                let y = topLeft.y as i32;
+                let w = width as i32;
+                let h = height as i32;
+
+                draw_highlight(&mut img, x, y, w, h);
+                render_marker_badge(&mut img, x, y - 20, number, color_rgba);
+            }
+            AnnotationItem::Freedraw { points, number, color } => {
+                let color_rgba = parse_hex_color(&color);
+                
+                if points.len() > 1 {
+                    for i in 0..(points.len() - 1) {
+                        let pt0 = &points[i];
+                        let pt1 = &points[i+1];
+                        draw_thick_line(&mut img, pt0.x as i32, pt0.y as i32, pt1.x as i32, pt1.y as i32, color_rgba, 3);
+                    }
+                } else if points.len() == 1 {
+                    draw_circle(&mut img, points[0].x as i32, points[0].y as i32, 1, color_rgba);
+                }
+
+                if !points.is_empty() {
+                    render_marker_badge(&mut img, points[0].x as i32, points[0].y as i32, number, color_rgba);
+                }
             }
         }
     }

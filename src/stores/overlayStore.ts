@@ -4,9 +4,17 @@ import type { Annotation } from '@/types/annotation'
 import { saveCaptureAnnotations } from '@/services/tauriCommands'
 import { useUiStore } from './uiStore'
 
+export interface HistoryAction {
+  type: 'add' | 'delete'
+  annotation: Annotation
+  index?: number
+}
+
 export const useOverlayStore = defineStore('overlay', () => {
-  const activeTool = ref<'marker' | 'rect' | 'arrow' | 'text' | null>(null)
+  const activeTool = ref<'marker' | 'rect' | 'arrow' | 'text' | 'blur' | 'freedraw' | 'highlight' | null>(null)
   const annotations = ref<Annotation[]>([])
+  const undoStack = ref<HistoryAction[]>([])
+  const redoStack = ref<HistoryAction[]>([])
   const captureId = ref<string | null>(null)
   const screenshotPath = ref<string>('')
   const monitorInfo = ref<any>(null)
@@ -21,23 +29,33 @@ export const useOverlayStore = defineStore('overlay', () => {
     screenshotPath.value = path
     monitorInfo.value = info || null
     annotations.value = []
+    undoStack.value = []
+    redoStack.value = []
     nextMarkerNumber.value = 1
     activeTool.value = null
     pendingAnnotation.value = null
     showIssueForm.value = false
   }
 
-  function setTool(tool: 'marker' | 'rect' | 'arrow' | 'text' | null) {
+  function setTool(tool: 'marker' | 'rect' | 'arrow' | 'text' | 'blur' | 'freedraw' | 'highlight' | null) {
     activeTool.value = tool
   }
 
   function addAnnotation(annotation: Annotation) {
     annotations.value.push(annotation)
     nextMarkerNumber.value++
+    undoStack.value.push({ type: 'add', annotation })
+    redoStack.value = []
   }
 
   function removeAnnotation(id: string) {
-    annotations.value = annotations.value.filter(a => a.id !== id)
+    const idx = annotations.value.findIndex(a => a.id === id)
+    if (idx !== -1) {
+      const annotation = annotations.value[idx]
+      annotations.value.splice(idx, 1)
+      undoStack.value.push({ type: 'delete', annotation, index: idx })
+      redoStack.value = []
+    }
   }
 
   function reset() {
@@ -45,10 +63,41 @@ export const useOverlayStore = defineStore('overlay', () => {
     screenshotPath.value = ''
     monitorInfo.value = null
     annotations.value = []
+    undoStack.value = []
+    redoStack.value = []
     nextMarkerNumber.value = 1
     activeTool.value = null
     pendingAnnotation.value = null
     showIssueForm.value = false
+  }
+
+  function undo() {
+    if (undoStack.value.length === 0) return
+    const action = undoStack.value.pop()
+    if (!action) return
+
+    if (action.type === 'add') {
+      annotations.value = annotations.value.filter(a => a.id !== action.annotation.id)
+      nextMarkerNumber.value = Math.max(1, nextMarkerNumber.value - 1)
+    } else if (action.type === 'delete') {
+      const insertIdx = action.index !== undefined ? action.index : annotations.value.length
+      annotations.value.splice(insertIdx, 0, action.annotation)
+    }
+    redoStack.value.push(action)
+  }
+
+  function redo() {
+    if (redoStack.value.length === 0) return
+    const action = redoStack.value.pop()
+    if (!action) return
+
+    if (action.type === 'add') {
+      annotations.value.push(action.annotation)
+      nextMarkerNumber.value++
+    } else if (action.type === 'delete') {
+      annotations.value = annotations.value.filter(a => a.id !== action.annotation.id)
+    }
+    undoStack.value.push(action)
   }
 
   async function saveAndClose(annotatedBase64?: string) {
@@ -68,8 +117,8 @@ export const useOverlayStore = defineStore('overlay', () => {
       if (ann.type === 'marker') {
         markerX = ann.position.x
         markerY = ann.position.y
-      } else if (ann.type === 'rect') {
-        // Center crop on the middle of the rectangle
+      } else if (ann.type === 'rect' || ann.type === 'blur' || ann.type === 'highlight') {
+        // Center crop on the middle of the region
         markerX = ann.topLeft.x + ann.width / 2
         markerY = ann.topLeft.y + ann.height / 2
       } else if (ann.type === 'arrow') {
@@ -80,6 +129,22 @@ export const useOverlayStore = defineStore('overlay', () => {
         // Center crop on the text block position
         markerX = ann.position.x
         markerY = ann.position.y
+      } else if (ann.type === 'freedraw') {
+        // Center crop on the center of the freehand stroke's bounding box
+        if (ann.points && ann.points.length > 0) {
+          let minX = ann.points[0].x
+          let maxX = ann.points[0].x
+          let minY = ann.points[0].y
+          let maxY = ann.points[0].y
+          for (const pt of ann.points) {
+            if (pt.x < minX) minX = pt.x
+            if (pt.x > maxX) maxX = pt.x
+            if (pt.y < minY) minY = pt.y
+            if (pt.y > maxY) maxY = pt.y
+          }
+          markerX = minX + (maxX - minX) / 2
+          markerY = minY + (maxY - minY) / 2
+        }
       }
 
       // Scale to physical coordinates matching the physical image size
@@ -123,6 +188,8 @@ export const useOverlayStore = defineStore('overlay', () => {
   return {
     activeTool,
     annotations,
+    undoStack,
+    redoStack,
     captureId,
     screenshotPath,
     monitorInfo,
@@ -135,5 +202,7 @@ export const useOverlayStore = defineStore('overlay', () => {
     removeAnnotation,
     reset,
     saveAndClose,
+    undo,
+    redo,
   }
 })

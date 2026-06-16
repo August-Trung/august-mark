@@ -10,9 +10,11 @@
     <canvas
       ref="drawingCanvasRef"
       class="overlay-canvas z-drawing"
+      :style="{ cursor: canvasCursor }"
       @mousedown="handleMouseDown"
       @mousemove="handleMouseMove"
       @mouseup="handleMouseUp"
+      @contextmenu="handleContextMenu"
     ></canvas>
 
     <!-- Floating Text Input box for Text Tool -->
@@ -31,14 +33,26 @@
         @keydown.esc="cancelTextInput"
       />
     </div>
+
+    <!-- Custom Context Menu for Annotation Deletion -->
+    <div
+      v-if="contextMenuState.visible"
+      class="custom-context-menu"
+      :style="{ left: contextMenuState.x + 'px', top: contextMenuState.y + 'px' }"
+    >
+      <button class="context-menu-item" @click="deleteSelected">
+        <i class="mdi mdi-delete-outline mr-1"></i> Xóa nét vẽ
+      </button>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, watch, nextTick } from 'vue'
+import { ref, onMounted, onUnmounted, watch, nextTick, computed } from 'vue'
 import { useCanvas } from '@/composables/useCanvas'
 import { useAnnotation } from '@/composables/useAnnotation'
 import { loadImage } from '@/utils/image'
+import { useOverlayStore } from '@/stores/overlayStore'
 
 const props = defineProps<{
   screenshotUrl: string
@@ -62,12 +76,19 @@ let markerCtx: CanvasRenderingContext2D | null = null
 let drawingCtx: CanvasRenderingContext2D | null = null
 let screenshotImage: HTMLImageElement | null = null
 
+const overlayStore = useOverlayStore()
+
 // Initialize Annotation drawing composable
 const {
   textInputState,
+  hoveredAnnotationId,
+  contextMenuState,
   handleMouseDown,
   handleMouseMove,
   handleMouseUp,
+  handleContextMenu,
+  deleteAnnotationById,
+  clearHover,
   commitTextInput,
   cancelTextInput,
   redrawCommittedCanvas
@@ -77,6 +98,17 @@ const {
   () => markerCtx,
   () => drawingCtx
 )
+
+const canvasCursor = computed(() => {
+  if (hoveredAnnotationId.value) return 'pointer'
+  return overlayStore.activeTool ? 'crosshair' : 'default'
+})
+
+const deleteSelected = () => {
+  if (contextMenuState.value.annotationId) {
+    deleteAnnotationById(contextMenuState.value.annotationId)
+  }
+}
 
 const resizeCanvases = () => {
   const width = window.innerWidth
@@ -138,6 +170,8 @@ defineExpose({
   screenshotCanvasRef,
   markerCanvasRef,
   drawingCanvasRef,
+  hoveredAnnotationId,
+  clearHover,
   getScreenshotCtx: () => screenshotCtx,
   getMarkerCtx: () => markerCtx,
   getDrawingCtx: () => drawingCtx,
@@ -175,7 +209,6 @@ defineExpose({
 
 .z-drawing {
   z-index: 3;
-  cursor: crosshair;
 }
 
 /* Floating Input Styling */
@@ -197,5 +230,43 @@ defineExpose({
   outline: none;
   min-width: 150px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* Custom Context Menu */
+.custom-context-menu {
+  position: fixed;
+  z-index: 10000;
+  background: rgba(26, 29, 39, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+  padding: 4px;
+  backdrop-filter: blur(8px);
+}
+
+.context-menu-item {
+  background: transparent;
+  border: none;
+  color: #ff5252;
+  font-family: sans-serif;
+  font-size: 0.875rem;
+  font-weight: 500;
+  padding: 8px 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  border-radius: 4px;
+  width: 100%;
+  text-align: left;
+  outline: none;
+  transition: background 0.15s ease;
+}
+
+.context-menu-item:hover {
+  background: rgba(255, 82, 82, 0.12);
+}
+
+.mr-1 {
+  margin-right: 4px;
 }
 </style>

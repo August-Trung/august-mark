@@ -136,6 +136,18 @@ const handleKeyDown = (e: KeyboardEvent) => {
     return
   }
 
+  // Ctrl+Z (Undo) and Ctrl+Y (Redo)
+  if (e.ctrlKey) {
+    if (e.key.toLowerCase() === 'z') {
+      e.preventDefault()
+      overlayStore.undo()
+    } else if (e.key.toLowerCase() === 'y') {
+      e.preventDefault()
+      overlayStore.redo()
+    }
+    return
+  }
+
   if (e.key === 'Escape') {
     if (overlayStore.showIssueForm) {
       // Close the issue form and discard the pending annotation
@@ -143,6 +155,11 @@ const handleKeyDown = (e: KeyboardEvent) => {
       overlayStore.pendingAnnotation = null
     } else {
       handleCancel()
+    }
+  } else if (e.key === 'Delete' || e.key === 'Backspace') {
+    if (annotationCanvasRef.value?.hoveredAnnotationId) {
+      overlayStore.removeAnnotation(annotationCanvasRef.value.hoveredAnnotationId)
+      annotationCanvasRef.value.clearHover()
     }
   } else if (e.key === '1') {
     overlayStore.setTool('marker')
@@ -152,6 +169,12 @@ const handleKeyDown = (e: KeyboardEvent) => {
     overlayStore.setTool('arrow')
   } else if (e.key === '4') {
     overlayStore.setTool('text')
+  } else if (e.key === '5') {
+    overlayStore.setTool('blur')
+  } else if (e.key === '6') {
+    overlayStore.setTool('freedraw')
+  } else if (e.key === '7') {
+    overlayStore.setTool('highlight')
   }
 }
 
