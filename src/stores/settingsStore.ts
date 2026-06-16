@@ -157,6 +157,11 @@ export const useSettingsStore = defineStore('settings', () => {
     set: (value) => setSettingValue('minimize_to_tray', value)
   })
 
+  const language = computed({
+    get: () => getSettingValue<'en' | 'vi'>('language', 'en'),
+    set: (value) => setSettingValue('language', value)
+  })
+
   return {
     settings,
     loading,
@@ -178,6 +183,7 @@ export const useSettingsStore = defineStore('settings', () => {
     backupNow,
     restoreFrom,
     listBackups,
-    minimizeToTray
+    minimizeToTray,
+    language
   }
 })

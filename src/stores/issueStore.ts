@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import type { Issue, UpdateIssuePayload } from '@/types/issue'
 import { useUiStore } from './uiStore'
+import { useI18n } from '@/composables/useI18n'
 import {
   getIssues as apiGetIssues,
   getIssue as apiGetIssue,
@@ -119,12 +120,14 @@ export const useIssueStore = defineStore('issue', () => {
       if (activeIssue.value && activeIssue.value.id === id) {
         activeIssue.value = updated
       }
-      uiStore.showToast({ message: 'Issue details updated', type: 'success' })
+      const { t } = useI18n()
+      uiStore.showToast({ message: t('toasts.issueUpdated'), type: 'success' })
       return updated
     } catch (err: any) {
       const msg = err.message || String(err)
       error.value = msg
-      uiStore.showToast({ message: `Failed to update issue: ${msg}`, type: 'error' })
+      const { t } = useI18n()
+      uiStore.showToast({ message: t('toasts.failedUpdateIssue', { msg }), type: 'error' })
       throw err
     } finally {
       uiStore.setLoading(false)
@@ -141,11 +144,13 @@ export const useIssueStore = defineStore('issue', () => {
       if (activeIssue.value && activeIssue.value.id === id) {
         activeIssue.value = null
       }
-      uiStore.showToast({ message: 'Issue deleted', type: 'success' })
+      const { t } = useI18n()
+      uiStore.showToast({ message: t('toasts.issueDeleted'), type: 'success' })
     } catch (err: any) {
       const msg = err.message || String(err)
       error.value = msg
-      uiStore.showToast({ message: `Failed to delete issue: ${msg}`, type: 'error' })
+      const { t } = useI18n()
+      uiStore.showToast({ message: t('toasts.failedDeleteIssue', { msg }), type: 'error' })
       throw err
     } finally {
       uiStore.setLoading(false)

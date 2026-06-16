@@ -11,7 +11,7 @@
   >
     <div class="panel-header">
       <h3 class="text-h6 font-weight-bold">
-        Issue Annotation #{{ nextMarkerNumber }}
+        {{ t('overlay.issueAnnotation', 'Issue Annotation') }} #{{ nextMarkerNumber }}
       </h3>
       <v-chip size="small" color="primary" variant="flat">
         {{ activeToolLabel }}
@@ -24,18 +24,18 @@
       <!-- Title -->
       <v-text-field
         v-model="title"
-        label="Title"
-        placeholder="Brief description of the issue"
+        :label="t('overlay.titleLabel')"
+        :placeholder="t('overlay.titlePlaceholder')"
         variant="outlined"
         density="comfortable"
-        :rules="[v => !!v || 'Title is required']"
+        :rules="[v => !!v || t('overlay.titleRequired', 'Title is required')]"
         required
       ></v-text-field>
 
       <!-- Type -->
       <v-select
         v-model="issueType"
-        label="Type"
+        :label="t('common.type', 'Type')"
         :items="issueTypes"
         variant="outlined"
         density="comfortable"
@@ -44,7 +44,7 @@
       <!-- Severity -->
       <v-select
         v-model="severity"
-        label="Severity"
+        :label="t('overlay.severityLabel')"
         :items="severities"
         variant="outlined"
         density="comfortable"
@@ -53,8 +53,8 @@
       <!-- Description -->
       <v-textarea
         v-model="description"
-        label="Description (optional)"
-        placeholder="Provide more context or steps to reproduce..."
+        :label="t('overlay.descLabel')"
+        :placeholder="t('overlay.descPlaceholder')"
         variant="outlined"
         density="comfortable"
         rows="4"
@@ -65,14 +65,14 @@
       <!-- Tags -->
       <v-combobox
         v-model="selectedTags"
-        label="Tags"
+        :label="t('issueDetail.tags')"
         :items="tagStore.tags.map(t => t.name)"
         variant="outlined"
         density="comfortable"
         multiple
         chips
         closable-chips
-        placeholder="Type tag and press Enter"
+        :placeholder="t('issueDetail.tagPlaceholder')"
       ></v-combobox>
     </v-form>
 
@@ -83,7 +83,7 @@
         class="flex-grow-1"
         @click="handleCancel"
       >
-        Cancel
+        {{ t('overlay.discard') }}
       </v-btn>
       <v-btn
         color="primary"
@@ -92,7 +92,7 @@
         :disabled="!isFormValid"
         @click="handleSave"
       >
-        Save
+        {{ t('overlay.saveIssue') }}
       </v-btn>
     </div>
   </v-navigation-drawer>
@@ -102,9 +102,11 @@
 import { ref, computed, watch } from 'vue'
 import { useOverlayStore } from '@/stores/overlayStore'
 import { useTagStore } from '@/stores/tagStore'
+import { useI18n } from '@/composables/useI18n'
 
 const overlayStore = useOverlayStore()
 const tagStore = useTagStore()
+const { t } = useI18n()
 
 const showIssueForm = computed({
   get: () => overlayStore.showIssueForm,
@@ -116,8 +118,8 @@ const showIssueForm = computed({
 const nextMarkerNumber = computed(() => overlayStore.nextMarkerNumber)
 const activeToolLabel = computed(() => {
   const tool = overlayStore.pendingAnnotation?.type || overlayStore.activeTool
-  if (!tool) return 'Annotation'
-  return tool.charAt(0).toUpperCase() + tool.slice(1)
+  if (!tool) return t('overlay.annotation', 'Annotation')
+  return t('overlay.drawTools.' + tool, tool)
 })
 
 const isFormValid = ref(false)

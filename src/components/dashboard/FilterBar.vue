@@ -4,7 +4,7 @@
       <!-- Title / Icon -->
       <div class="d-flex align-center mr-2">
         <v-icon color="primary" class="mr-2">mdi-filter-variant</v-icon>
-        <span class="text-subtitle-1 font-weight-medium text-white">Filters</span>
+        <span class="text-subtitle-1 font-weight-medium text-white">{{ t('common.filters') }}</span>
       </div>
 
       <!-- Type Select -->
@@ -12,7 +12,9 @@
         <v-select
           v-model="filters.types"
           :items="typeOptions"
-          label="Issue Type"
+          item-title="title"
+          item-value="value"
+          :label="t('common.issueType')"
           multiple
           chips
           closable-chips
@@ -30,7 +32,9 @@
         <v-select
           v-model="filters.severities"
           :items="severityOptions"
-          label="Severity"
+          item-title="title"
+          item-value="value"
+          :label="t('common.severity')"
           multiple
           chips
           closable-chips
@@ -48,7 +52,9 @@
         <v-select
           v-model="filters.statuses"
           :items="statusOptions"
-          label="Status"
+          item-title="title"
+          item-value="value"
+          :label="t('common.status')"
           multiple
           chips
           closable-chips
@@ -66,7 +72,7 @@
         <v-select
           v-model="filters.tags"
           :items="tagStore.tags.map(t => t.name)"
-          label="Tags"
+          :label="t('common.tags')"
           multiple
           chips
           closable-chips
@@ -84,7 +90,9 @@
         <v-select
           v-model="sortBy"
           :items="sortOptions"
-          label="Sort By"
+          item-title="title"
+          item-value="value"
+          :label="t('common.sortBy')"
           density="compact"
           hide-details
           variant="solo-filled"
@@ -102,7 +110,7 @@
         class="text-none ml-auto"
         @click="clearFilters"
       >
-        Clear Filters
+        {{ t('common.clearFilters') }}
       </v-btn>
     </div>
   </v-card>
@@ -113,7 +121,9 @@ import { computed } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useIssueStore } from '@/stores/issueStore'
 import { useTagStore } from '@/stores/tagStore'
+import { useI18n } from '@/composables/useI18n'
 
+const { t } = useI18n()
 const issueStore = useIssueStore()
 const tagStore = useTagStore()
 const { filters, sortBy } = storeToRefs(issueStore)
@@ -121,15 +131,36 @@ const { clearFilters } = issueStore
 
 tagStore.loadTags()
 
-const typeOptions = ['Bug', 'UI', 'UX', 'Suggestion', 'Requirement', 'Question']
-const severityOptions = ['Critical', 'Major', 'Minor', 'Info']
-const statusOptions = ['Draft', 'Open', 'In Progress', 'Resolved', 'Closed']
-const sortOptions = [
-  { title: 'Newest First', value: 'newest' },
-  { title: 'Oldest First', value: 'oldest' },
-  { title: 'Highest Severity', value: 'severity' },
-  { title: 'Status Order', value: 'status' }
-]
+const typeOptions = computed(() => [
+  { title: t('issueTypes.Bug'), value: 'Bug' },
+  { title: t('issueTypes.UI'), value: 'UI' },
+  { title: t('issueTypes.UX'), value: 'UX' },
+  { title: t('issueTypes.Suggestion'), value: 'Suggestion' },
+  { title: t('issueTypes.Requirement'), value: 'Requirement' },
+  { title: t('issueTypes.Question'), value: 'Question' }
+])
+
+const severityOptions = computed(() => [
+  { title: t('severities.Critical'), value: 'Critical' },
+  { title: t('severities.Major'), value: 'Major' },
+  { title: t('severities.Minor'), value: 'Minor' },
+  { title: t('severities.Info'), value: 'Info' }
+])
+
+const statusOptions = computed(() => [
+  { title: t('statuses.Draft'), value: 'Draft' },
+  { title: t('statuses.Open'), value: 'Open' },
+  { title: t('statuses.In Progress'), value: 'In Progress' },
+  { title: t('statuses.Resolved'), value: 'Resolved' },
+  { title: t('statuses.Closed'), value: 'Closed' }
+])
+
+const sortOptions = computed(() => [
+  { title: t('sortOptions.newest'), value: 'newest' },
+  { title: t('sortOptions.oldest'), value: 'oldest' },
+  { title: t('sortOptions.severity'), value: 'severity' },
+  { title: t('sortOptions.status'), value: 'status' }
+])
 
 const hasActiveFilters = computed(() => {
   return (

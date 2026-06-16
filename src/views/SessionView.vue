@@ -20,18 +20,18 @@
               color="medium-emphasis"
               @click="goBack"
             >
-              Back to Dashboard
+              {{ t('sessionView.backToDashboard') }}
             </v-btn>
             <div class="d-flex align-center gap-2">
               <h1 class="text-h4 font-weight-bold text-white mb-1">
                 {{ session.title }}
               </h1>
               <v-chip :color="statusColor" size="small" class="text-uppercase font-weight-bold ml-3">
-                {{ session.status }}
+                {{ session.status === 'active' ? t('sessionView.active') : t('sessionView.completed') }}
               </v-chip>
             </div>
             <p class="text-subtitle-1 text-medium-emphasis">
-              {{ session.description || 'No description provided' }}
+              {{ session.description || t('issueDetail.noDescription') }}
             </p>
           </div>
 
@@ -47,7 +47,7 @@
               :loading="isSharing"
               @click="handleCloudShare"
             >
-              Share to Cloud
+              {{ t('sessionView.shareToCloud') }}
             </v-btn>
 
             <!-- Export Button -->
@@ -59,7 +59,7 @@
               class="text-none"
               @click="handleExport"
             >
-              Export
+              {{ t('common.export') }}
             </v-btn>
 
             <!-- Capture Button -->
@@ -71,7 +71,7 @@
               :loading="isCapturing"
               @click="handleCapture"
             >
-              Capture markup
+              {{ t('sessionView.captureMarkup', 'Capture screen') }}
             </v-btn>
           </div>
         </div>
@@ -80,9 +80,9 @@
 
         <!-- Issues Section Header -->
         <div class="d-flex align-center justify-space-between mb-4">
-          <h2 class="text-h5 font-weight-bold text-white">Issues in this Session</h2>
+          <h2 class="text-h5 font-weight-bold text-white">{{ t('sessionView.issuesInSession', 'Issues in this Session') }}</h2>
           <span class="text-caption text-medium-emphasis">
-            Showing {{ filteredIssues.length }} of {{ issues.length }} issue(s)
+            {{ t('sessionView.showingIssues', 'Showing {filtered} of {total} issue(s)', { filtered: filteredIssues.length, total: issues.length }) }}
           </span>
         </div>
 
@@ -102,9 +102,9 @@
     <!-- Delete Issue Confirmation Dialog -->
     <ConfirmDialog
       v-model="showDeleteDialog"
-      title="Delete Issue"
-      message="Are you sure you want to delete this issue? The crop file on disk will also be deleted."
-      confirm-text="Delete"
+      :title="t('dashboardView.deleteIssueTitle')"
+      :message="t('dashboardView.deleteIssueConfirm')"
+      :confirm-text="t('common.delete')"
       confirm-color="error"
       @confirm="executeDeleteIssue"
     />
@@ -121,15 +121,15 @@
     <v-dialog v-model="showShareDialog" max-width="500">
       <v-card border>
         <v-card-title class="d-flex align-center justify-space-between py-4 px-6 border-b">
-          <span class="text-h6 font-weight-bold">Shared to Google Drive</span>
+          <span class="text-h6 font-weight-bold">{{ t('sessionView.cloudShareTitle') }}</span>
           <v-btn icon="mdi-close" variant="text" density="comfortable" @click="showShareDialog = false"></v-btn>
         </v-card-title>
         
         <v-card-text class="pa-6 text-center">
           <v-icon icon="mdi-cloud-check" size="64" color="success" class="mb-4"></v-icon>
-          <div class="text-h6 font-weight-bold text-white mb-2">Report Shared Successfully!</div>
+          <div class="text-h6 font-weight-bold text-white mb-2">{{ t('sessionView.cloudShareSuccess', 'Report Shared Successfully!') }}</div>
           <div class="text-body-2 text-medium-emphasis mb-6">
-            Anyone with this link can view the interactive HTML session report.
+            {{ t('sessionView.cloudShareDesc') }}
           </div>
 
           <v-text-field
@@ -144,7 +144,7 @@
         </v-card-text>
 
         <v-card-actions class="py-4 px-6 border-t d-flex justify-end">
-          <v-btn color="primary" variant="flat" @click="showShareDialog = false">Done</v-btn>
+          <v-btn color="primary" variant="flat" @click="showShareDialog = false">{{ t('common.ok', 'Done') }}</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -153,7 +153,7 @@
     <v-snackbar v-model="showSuccess" color="success" timeout="4000" location="top">
       {{ successMessage }}
       <template v-slot:actions>
-        <v-btn variant="text" @click="showSuccess = false">Close</v-btn>
+        <v-btn variant="text" @click="showSuccess = false">{{ t('sessionView.closeBtn') }}</v-btn>
       </template>
     </v-snackbar>
 
@@ -161,7 +161,7 @@
     <v-snackbar v-model="showError" color="error" timeout="6000" location="top">
       {{ errorMessage }}
       <template v-slot:actions>
-        <v-btn variant="text" @click="showError = false">Close</v-btn>
+        <v-btn variant="text" @click="showError = false">{{ t('sessionView.closeBtn') }}</v-btn>
       </template>
     </v-snackbar>
   </div>
@@ -181,6 +181,9 @@ import IssueList from '@/components/dashboard/IssueList.vue'
 import ConfirmDialog from '@/components/common/ConfirmDialog.vue'
 import ExportDialog from '@/components/export/ExportDialog.vue'
 import type { Session } from '@/types/session'
+import { useI18n } from '@/composables/useI18n'
+
+const { t } = useI18n()
 
 const route = useRoute()
 const router = useRouter()
@@ -295,7 +298,7 @@ async function handleCloudShare() {
     showShareDialog.value = true
   } catch (err: any) {
     console.error('Cloud share failed:', err)
-    errorMessage.value = err?.message || err || 'Failed to share session report to Google Drive'
+    errorMessage.value = err?.message || err || t('sessionView.failedShare')
     showError.value = true
   } finally {
     isSharing.value = false
@@ -305,7 +308,7 @@ async function handleCloudShare() {
 async function copyShareUrl() {
   try {
     await navigator.clipboard.writeText(shareUrl.value)
-    successMessage.value = 'Share link copied to clipboard!'
+    successMessage.value = t('sessionView.copiedToClipboard')
     showSuccess.value = true
   } catch (err) {
     console.error('Failed to copy text:', err)

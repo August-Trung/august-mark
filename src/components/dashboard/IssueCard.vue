@@ -39,7 +39,7 @@
         {{ issue.title }}
       </v-card-title>
       <v-card-subtitle class="pl-0 text-caption text-truncate text-medium-emphasis">
-        {{ issue.description || 'No description provided' }}
+        {{ issue.description || t('common.noDescription') }}
       </v-card-subtitle>
       <div v-if="issue.tags && issue.tags.length > 0" class="pl-0 mt-2 d-flex flex-wrap gap-1">
         <v-chip
@@ -66,7 +66,7 @@
           variant="flat"
           class="font-weight-bold"
         >
-          {{ issue.issueType }}
+          {{ t('issueTypes.' + issue.issueType, issue.issueType) }}
         </v-chip>
 
         <!-- Severity Chip -->
@@ -76,7 +76,7 @@
           variant="tonal"
           class="font-weight-bold"
         >
-          {{ issue.severity }}
+          {{ t('severities.' + issue.severity, issue.severity) }}
         </v-chip>
 
         <!-- Status Chip -->
@@ -86,7 +86,7 @@
           variant="outlined"
           class="font-weight-bold"
         >
-          {{ issue.status }}
+          {{ t('statuses.' + issue.status, issue.status) }}
         </v-chip>
       </div>
 
@@ -107,6 +107,7 @@ import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { convertFileSrc } from '@tauri-apps/api/core'
 import type { Issue } from '@/types/issue'
+import { useI18n } from '@/composables/useI18n'
 
 const props = defineProps<{
   issue: Issue
@@ -116,6 +117,7 @@ defineEmits<{
   (e: 'delete', id: string): void
 }>()
 
+const { t } = useI18n()
 const router = useRouter()
 
 const cropUrl = computed(() => {

@@ -2,11 +2,11 @@
   <v-container class="py-6 px-8 max-width-container" fluid>
     <div class="d-flex align-center justify-space-between mb-6">
       <div>
-        <h1 class="text-h4 font-weight-bold text-white mb-1">Settings</h1>
-        <p class="text-subtitle-1 text-medium-emphasis">Configure August Mark to match your workflow</p>
+        <h1 class="text-h4 font-weight-bold text-white mb-1">{{ t('common.settings') }}</h1>
+        <p class="text-subtitle-1 text-medium-emphasis">{{ t('settingsView.settingsSubtitle', 'Configure August Mark to match your workflow') }}</p>
       </div>
       <v-chip color="success" variant="outlined" prepend-icon="mdi-cloud-check" size="small">
-        Settings saved automatically
+        {{ t('settingsView.settingsSaved') }}
       </v-chip>
     </div>
 
@@ -14,10 +14,10 @@
       <v-col cols="12" md="4" lg="3">
         <v-card class="mb-4" border variant="flat">
           <v-tabs v-model="activeTab" direction="vertical" color="primary">
-            <v-tab value="general" prepend-icon="mdi-cog">General</v-tab>
-            <v-tab value="capture" prepend-icon="mdi-camera">Capture & Hotkeys</v-tab>
-            <v-tab value="sync" prepend-icon="mdi-cloud-sync">Cloud Sync</v-tab>
-            <v-tab value="info" prepend-icon="mdi-information">System Info</v-tab>
+            <v-tab value="general" prepend-icon="mdi-cog">{{ t('settingsView.general') }}</v-tab>
+            <v-tab value="capture" prepend-icon="mdi-camera">{{ t('settingsView.captureHotkeys') }}</v-tab>
+            <v-tab value="sync" prepend-icon="mdi-cloud-sync">{{ t('settingsView.cloudSync') }}</v-tab>
+            <v-tab value="info" prepend-icon="mdi-information">{{ t('settingsView.systemInfo') }}</v-tab>
           </v-tabs>
         </v-card>
       </v-col>
@@ -27,16 +27,16 @@
           <!-- General Tab -->
           <v-window-item value="general">
             <v-card border variant="flat" class="pa-6">
-              <h2 class="text-h5 font-weight-bold text-primary mb-6">General Preferences</h2>
+              <h2 class="text-h5 font-weight-bold text-primary mb-6">{{ t('settingsView.generalPrefs') }}</h2>
               
               <!-- Theme Selection -->
               <div class="mb-6">
-                <div class="text-subtitle-1 font-weight-bold mb-1">Interface Theme</div>
-                <div class="text-body-2 text-medium-emphasis mb-3">Choose how August Mark looks on your screen</div>
+                <div class="text-subtitle-1 font-weight-bold mb-1">{{ t('settingsView.themeTitle') }}</div>
+                <div class="text-body-2 text-medium-emphasis mb-3">{{ t('settingsView.themeDesc') }}</div>
                 <v-radio-group v-model="settingsStore.theme" inline class="theme-radios">
-                  <v-radio label="August Dark" value="dark" class="mr-4"></v-radio>
-                  <v-radio label="August Light" value="light" class="mr-4"></v-radio>
-                  <v-radio label="System Default" value="system"></v-radio>
+                  <v-radio :label="t('settingsView.themeDark')" value="dark" class="mr-4"></v-radio>
+                  <v-radio :label="t('settingsView.themeLight')" value="light" class="mr-4"></v-radio>
+                  <v-radio :label="t('settingsView.themeSystem')" value="system"></v-radio>
                 </v-radio-group>
               </div>
 
@@ -44,8 +44,8 @@
 
               <!-- Language Selection -->
               <div class="mb-6">
-                <div class="text-subtitle-1 font-weight-bold mb-1">Display Language</div>
-                <div class="text-body-2 text-medium-emphasis mb-3">Select your preferred user interface language</div>
+                <div class="text-subtitle-1 font-weight-bold mb-1">{{ t('settingsView.displayLanguage') }}</div>
+                <div class="text-body-2 text-medium-emphasis mb-3">{{ t('settingsView.languageDesc') }}</div>
                 <v-select
                   v-model="selectedLanguage"
                   :items="languages"
@@ -61,8 +61,8 @@
 
               <!-- Default Project -->
               <div>
-                <div class="text-subtitle-1 font-weight-bold mb-1">Default Project</div>
-                <div class="text-body-2 text-medium-emphasis mb-3">Select the default project for new sessions</div>
+                <div class="text-subtitle-1 font-weight-bold mb-1">{{ t('settingsView.defaultProject') }}</div>
+                <div class="text-body-2 text-medium-emphasis mb-3">{{ t('settingsView.defaultProjectDesc') }}</div>
                 <v-select
                   v-model="settingsStore.defaultProjectId"
                   :items="projects"
@@ -80,12 +80,12 @@
           <!-- Capture & Hotkeys Tab -->
           <v-window-item value="capture">
             <v-card border variant="flat" class="pa-6">
-              <h2 class="text-h5 font-weight-bold text-primary mb-6">Capture & Trigger Options</h2>
+              <h2 class="text-h5 font-weight-bold text-primary mb-6">{{ t('settingsView.capturePrefs') }}</h2>
 
               <!-- Delayed Capture -->
               <div class="mb-6">
-                <div class="text-subtitle-1 font-weight-bold mb-1">Delayed Capture Timer</div>
-                <div class="text-body-2 text-medium-emphasis mb-3">Set a delay timer to capture tooltips, menus, or transient UI states</div>
+                <div class="text-subtitle-1 font-weight-bold mb-1">{{ t('settingsView.delayedCapture') }}</div>
+                <div class="text-body-2 text-medium-emphasis mb-3">{{ t('settingsView.delayedCaptureDesc') }}</div>
                 <v-select
                   v-model="delayedCapture"
                   :items="delayOptions"
@@ -101,8 +101,8 @@
 
               <!-- Image Quality -->
               <div class="mb-6">
-                <div class="text-subtitle-1 font-weight-bold mb-1">Screenshot Quality ({{ settingsStore.screenshotQuality }}%)</div>
-                <div class="text-body-2 text-medium-emphasis mb-3">Adjust the JPEG/PNG export image compression level</div>
+                <div class="text-subtitle-1 font-weight-bold mb-1">{{ t('settingsView.screenshotQuality') }} ({{ settingsStore.screenshotQuality }}%)</div>
+                <div class="text-body-2 text-medium-emphasis mb-3">{{ t('settingsView.screenshotQualityDesc') }}</div>
                 <div class="d-flex align-center gap-4">
                   <v-slider
                     v-model="settingsStore.screenshotQuality"
@@ -120,8 +120,8 @@
 
               <!-- Mouse Hold Duration -->
               <div class="mb-6">
-                <div class="text-subtitle-1 font-weight-bold mb-1">Middle Mouse Trigger Duration ({{ settingsStore.holdDurationMs }}ms)</div>
-                <div class="text-body-2 text-medium-emphasis mb-3">Time required to hold middle click to activate screen capture</div>
+                <div class="text-subtitle-1 font-weight-bold mb-1">{{ t('settingsView.holdDuration') }} ({{ settingsStore.holdDurationMs }}ms)</div>
+                <div class="text-body-2 text-medium-emphasis mb-3">{{ t('settingsView.holdDurationDesc') }}</div>
                 <v-slider
                   v-model="settingsStore.holdDurationMs"
                   :min="500"
@@ -137,8 +137,8 @@
 
               <!-- Minimize to Tray -->
               <div>
-                <div class="text-subtitle-1 font-weight-bold mb-1">Minimize to System Tray</div>
-                <div class="text-body-2 text-medium-emphasis mb-3">Hide the main window in the system tray instead of closing it completely</div>
+                <div class="text-subtitle-1 font-weight-bold mb-1">{{ t('settingsView.minimizeToTray') }}</div>
+                <div class="text-body-2 text-medium-emphasis mb-3">{{ t('settingsView.minimizeDesc') }}</div>
                 <v-switch
                   v-model="settingsStore.minimizeToTray"
                   color="primary"
@@ -152,13 +152,13 @@
           <!-- Cloud Sync Tab -->
           <v-window-item value="sync">
             <v-card border variant="flat" class="pa-6">
-              <h2 class="text-h5 font-weight-bold text-primary mb-6">Cloud Sync & Backup</h2>
+              <h2 class="text-h5 font-weight-bold text-primary mb-6">{{ t('settingsView.cloudSync') }}</h2>
               
               <!-- Google Drive Connection -->
               <div class="mb-6">
-                <div class="text-subtitle-1 font-weight-bold mb-1">Google Drive Integration</div>
+                <div class="text-subtitle-1 font-weight-bold mb-1">{{ t('settingsView.gdriveTitle') }}</div>
                 <div class="text-body-2 text-medium-emphasis mb-4">
-                  Connect your Google Drive account to backup your SQLite database and screenshots, or generate public share links for your session reports.
+                  {{ t('settingsView.gdriveDesc') }}
                 </div>
 
                 <div v-if="settingsStore.gdriveConnected" class="d-flex align-center flex-wrap gap-4 pa-4 border rounded bg-surface-variant">
@@ -167,8 +167,8 @@
                   </v-avatar>
                   <div class="flex-grow-1">
                     <div class="font-weight-bold text-white d-flex align-center">
-                      Google Account Connected
-                      <v-chip color="success" size="x-small" class="ml-2" variant="flat">Active</v-chip>
+                      {{ t('settingsView.connectedAs') }}
+                      <v-chip color="success" size="x-small" class="ml-2" variant="flat">{{ t('header.active') }}</v-chip>
                     </div>
                     <div class="text-body-2 text-medium-emphasis">{{ settingsStore.gdriveEmail || 'No email associated' }}</div>
                   </div>
@@ -179,7 +179,7 @@
                     :loading="settingsStore.loading"
                     @click="handleDisconnect"
                   >
-                    Disconnect
+                    {{ t('settingsView.disconnectBtn') }}
                   </v-btn>
                 </div>
 
@@ -189,8 +189,8 @@
                       <v-icon icon="mdi-google-drive" color="grey-lighten-1" size="30"></v-icon>
                     </v-avatar>
                     <div>
-                      <div class="font-weight-bold text-white">Google Drive is not connected</div>
-                      <div class="text-body-2 text-medium-emphasis">Authorize August Mark to sync your bug reports</div>
+                      <div class="font-weight-bold text-white">{{ t('settingsView.disconnected') }}</div>
+                      <div class="text-body-2 text-medium-emphasis">{{ t('settingsView.notConnected') }}</div>
                     </div>
                   </div>
                   <v-btn
@@ -199,7 +199,7 @@
                     :loading="settingsStore.loading"
                     @click="handleConnect"
                   >
-                    Connect Google Drive
+                    {{ t('settingsView.connectBtn') }}
                   </v-btn>
                 </div>
               </div>
@@ -211,8 +211,8 @@
                 <!-- Auto Backup Toggle -->
                 <div class="d-flex align-center justify-space-between mb-6">
                   <div>
-                    <div class="text-subtitle-1 font-weight-bold mb-1">Automatic Cloud Backup</div>
-                    <div class="text-body-2 text-medium-emphasis">Automatically backup database and screenshots to Google Drive on closure</div>
+                    <div class="text-subtitle-1 font-weight-bold mb-1">{{ t('settingsView.autoBackup') }}</div>
+                    <div class="text-body-2 text-medium-emphasis">{{ t('settingsView.autoBackupDesc', 'Automatically backup database and screenshots to Google Drive on closure') }}</div>
                   </div>
                   <v-switch
                     v-model="settingsStore.autoBackup"
@@ -226,9 +226,9 @@
 
                 <!-- Manual Backup & Restore Section -->
                 <div>
-                  <div class="text-subtitle-1 font-weight-bold mb-1">Manual Backup & Restore</div>
+                  <div class="text-subtitle-1 font-weight-bold mb-1">{{ t('settingsView.manualBackup') }}</div>
                   <div class="text-body-2 text-medium-emphasis mb-4">
-                    Create a backup point immediately or restore your application data from an existing backup.
+                    {{ t('settingsView.manualBackupDesc') }}
                   </div>
 
                   <div class="d-flex align-center gap-4 mb-6">
@@ -238,7 +238,7 @@
                       :loading="settingsStore.backupLoading"
                       @click="handleManualBackup"
                     >
-                      Backup Now
+                      {{ t('settingsView.backupNow') }}
                     </v-btn>
 
                     <v-btn
@@ -248,7 +248,7 @@
                       :loading="settingsStore.backupLoading"
                       @click="openRestoreDialog"
                     >
-                      Restore Data
+                      {{ t('settingsView.restoreBtn') }}
                     </v-btn>
                   </div>
 
@@ -258,7 +258,7 @@
                   </div>
                   <div v-else class="text-body-2 text-medium-emphasis">
                     <v-icon icon="mdi-clock-alert" size="small" class="mr-1"></v-icon>
-                    No backups recorded yet.
+                    {{ t('settingsView.noBackups') }}
                   </div>
                 </div>
               </div>
@@ -268,7 +268,7 @@
           <!-- System Info Tab -->
           <v-window-item value="info">
             <v-card border variant="flat" class="pa-6">
-              <h2 class="text-h5 font-weight-bold text-primary mb-6">System & Database Statistics</h2>
+              <h2 class="text-h5 font-weight-bold text-primary mb-6">{{ t('settingsView.sysInfoTitle') }}</h2>
               
               <v-row class="mb-4">
                 <v-col cols="12" sm="6" md="4" v-for="stat in statCards" :key="stat.title">
@@ -308,7 +308,7 @@
 
               <div class="d-flex align-center justify-space-between py-2">
                 <div>
-                  <div class="font-weight-medium">Database Location</div>
+                  <div class="font-weight-medium">{{ t('settingsView.databaseFile') }}</div>
                   <div class="text-caption text-medium-emphasis">Local storage directory for captures and DB</div>
                 </div>
                 <div class="text-caption font-weight-bold text-primary text-truncate max-width-path">
@@ -331,7 +331,7 @@
 
         <v-card-text class="pa-6">
           <div class="text-body-2 text-medium-emphasis mb-4">
-            Select a backup file from Google Drive to restore your database and screenshots.
+            {{ t('settingsView.selectBackup') }}
           </div>
 
           <v-alert
@@ -341,19 +341,19 @@
             class="mb-6"
             density="comfortable"
           >
-            <strong>Warning:</strong> Restoring will overwrite all current issues, sessions, and screenshots. This action cannot be undone.
+            <strong>{{ t('common.error') }}:</strong> {{ t('settingsView.restoreWarning') }}
           </v-alert>
 
           <!-- Loading backups state -->
           <div v-if="loadingBackups" class="d-flex flex-column align-center py-6">
             <v-progress-circular indeterminate color="primary" class="mb-2"></v-progress-circular>
-            <span class="text-caption text-medium-emphasis">Retrieving backups...</span>
+            <span class="text-caption text-medium-emphasis">{{ t('common.loading') }}</span>
           </div>
 
           <!-- Empty list state -->
           <div v-else-if="backupsList.length === 0" class="py-6 text-center border rounded border-dashed">
             <v-icon icon="mdi-cloud-search" size="40" class="text-medium-emphasis mb-2"></v-icon>
-            <div class="text-subtitle-1 font-weight-medium">No backups found</div>
+            <div class="text-subtitle-1 font-weight-medium">{{ t('settingsView.noBackups') }}</div>
             <div class="text-caption text-medium-emphasis">Create a backup first or check your connection</div>
           </div>
 
@@ -452,9 +452,11 @@ import { useSettingsStore } from '@/stores/settingsStore'
 import { useProjectStore } from '@/stores/projectStore'
 import { getVersion } from '@tauri-apps/api/app'
 import { invoke } from '@tauri-apps/api/core'
+import { useI18n } from '@/composables/useI18n'
 
 const settingsStore = useSettingsStore()
 const projectStore = useProjectStore()
+const { t } = useI18n()
 
 const activeTab = ref('general')
 const appVersion = ref('Loading...')
@@ -493,9 +495,9 @@ const delayedCapture = computed({
 const projects = computed(() => projectStore.projects)
 
 const statCards = computed(() => [
-  { title: 'Total Projects', value: stats.value.projects, icon: 'mdi-folder', color: 'primary' },
-  { title: 'Total Sessions', value: stats.value.sessions, icon: 'mdi-clipboard-list', color: 'secondary' },
-  { title: 'Issues Logged', value: stats.value.issues, icon: 'mdi-alert-circle', color: 'error' }
+  { title: t('settingsView.totalProjects', 'Total Projects'), value: stats.value.projects, icon: 'mdi-folder', color: 'primary' },
+  { title: t('settingsView.totalSessions', 'Total Sessions'), value: stats.value.sessions, icon: 'mdi-clipboard-list', color: 'secondary' },
+  { title: t('settingsView.issuesLogged', 'Issues Logged'), value: stats.value.issues, icon: 'mdi-alert-circle', color: 'error' }
 ])
 
 onMounted(async () => {

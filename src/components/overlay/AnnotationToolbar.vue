@@ -5,11 +5,11 @@
       type="button"
       class="toolbar-btn"
       :class="{ active: activeTool === 'marker' }"
-      title="Marker Tool (1)"
+      :title="t('overlay.drawTools.marker') + ' (1)'"
       @click="toggleTool('marker')"
     >
       <i class="mdi mdi-numeric-1-circle-outline"></i>
-      <span class="btn-label">Marker</span>
+      <span class="btn-label">{{ t('overlay.drawTools.marker') }}</span>
     </button>
 
     <!-- Rectangle Tool -->
@@ -17,11 +17,11 @@
       type="button"
       class="toolbar-btn"
       :class="{ active: activeTool === 'rect' }"
-      title="Rectangle Tool (2)"
+      :title="t('overlay.drawTools.rect') + ' (2)'"
       @click="toggleTool('rect')"
     >
       <i class="mdi mdi-numeric-2-circle-outline"></i>
-      <span class="btn-label">Rect</span>
+      <span class="btn-label">{{ t('overlay.drawTools.rect') }}</span>
     </button>
 
     <!-- Arrow Tool -->
@@ -29,11 +29,11 @@
       type="button"
       class="toolbar-btn"
       :class="{ active: activeTool === 'arrow' }"
-      title="Arrow Tool (3)"
+      :title="t('overlay.drawTools.arrow') + ' (3)'"
       @click="toggleTool('arrow')"
     >
       <i class="mdi mdi-numeric-3-circle-outline"></i>
-      <span class="btn-label">Arrow</span>
+      <span class="btn-label">{{ t('overlay.drawTools.arrow') }}</span>
     </button>
 
     <!-- Text Tool -->
@@ -41,11 +41,11 @@
       type="button"
       class="toolbar-btn"
       :class="{ active: activeTool === 'text' }"
-      title="Text Tool (4)"
+      :title="t('overlay.drawTools.text') + ' (4)'"
       @click="toggleTool('text')"
     >
       <i class="mdi mdi-numeric-4-circle-outline"></i>
-      <span class="btn-label">Text</span>
+      <span class="btn-label">{{ t('overlay.drawTools.text') }}</span>
     </button>
 
     <!-- Blur Tool -->
@@ -53,11 +53,11 @@
       type="button"
       class="toolbar-btn"
       :class="{ active: activeTool === 'blur' }"
-      title="Blur Tool (5)"
+      :title="t('overlay.drawTools.blur') + ' (5)'"
       @click="toggleTool('blur')"
     >
       <i class="mdi mdi-numeric-5-circle-outline"></i>
-      <span class="btn-label">Blur</span>
+      <span class="btn-label">{{ t('overlay.drawTools.blur') }}</span>
     </button>
 
     <!-- Freehand Tool -->
@@ -65,11 +65,11 @@
       type="button"
       class="toolbar-btn"
       :class="{ active: activeTool === 'freedraw' }"
-      title="Freehand Tool (6)"
+      :title="t('overlay.drawTools.freedraw') + ' (6)'"
       @click="toggleTool('freedraw')"
     >
       <i class="mdi mdi-numeric-6-circle-outline"></i>
-      <span class="btn-label">Freehand</span>
+      <span class="btn-label">{{ t('overlay.drawTools.freedraw') }}</span>
     </button>
 
     <!-- Highlight Tool -->
@@ -77,11 +77,11 @@
       type="button"
       class="toolbar-btn"
       :class="{ active: activeTool === 'highlight' }"
-      title="Highlight Tool (7)"
+      :title="t('overlay.drawTools.highlight') + ' (7)'"
       @click="toggleTool('highlight')"
     >
       <i class="mdi mdi-numeric-7-circle-outline"></i>
-      <span class="btn-label">Highlight</span>
+      <span class="btn-label">{{ t('overlay.drawTools.highlight') }}</span>
     </button>
   </div>
 </template>
@@ -89,9 +89,11 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useOverlayStore } from '@/stores/overlayStore'
+import { useI18n } from '@/composables/useI18n'
 
 const overlayStore = useOverlayStore()
 const activeTool = computed(() => overlayStore.activeTool)
+const { t } = useI18n()
 
 const toggleTool = (tool: 'marker' | 'rect' | 'arrow' | 'text' | 'blur' | 'freedraw' | 'highlight') => {
   if (overlayStore.activeTool === tool) {

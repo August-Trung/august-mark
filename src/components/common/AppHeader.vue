@@ -12,7 +12,7 @@
         class="mr-1"
       ></v-icon>
       <span class="text-subtitle-1 font-weight-bold text-white">
-        {{ activeProject ? activeProject.name : 'No Active Project' }}
+        {{ activeProject ? activeProject.name : t('common.noActiveProject') }}
       </span>
       <v-chip
         v-if="activeSessionsCount > 0"
@@ -21,7 +21,7 @@
         class="ml-2 font-weight-bold"
         variant="flat"
       >
-        {{ activeSessionsCount }} Active
+        {{ activeSessionsCount }} {{ t('header.active') }}
       </v-chip>
     </div>
 
@@ -32,7 +32,7 @@
         v-model="selectedItem"
         :items="searchResults"
         :loading="isSearching"
-        placeholder="Search sessions, issues..."
+        :placeholder="t('header.searchPlaceholder')"
         prepend-inner-icon="mdi-magnify"
         variant="solo-filled"
         density="compact"
@@ -49,7 +49,7 @@
       >
         <template v-slot:no-data>
           <div class="px-4 py-2 text-caption text-medium-emphasis">
-            {{ searchQuery ? 'No results found' : 'Type to search...' }}
+            {{ searchQuery ? t('header.noResults') : t('header.typeToSearch') }}
           </div>
         </template>
 
@@ -77,8 +77,8 @@
     <div class="d-flex align-center gap-4">
       <div class="d-flex align-center text-caption text-medium-emphasis bg-surface px-3 py-1 rounded border">
         <v-icon size="14" class="mr-1" color="primary">mdi-keyboard</v-icon>
-        <span class="mr-1">Trigger Capture:</span>
-        <kbd class="kbd-key mr-1">Middle Click</kbd> or <kbd class="kbd-key ml-1">Ctrl + Shift + M</kbd>
+        <span class="mr-1">{{ t('header.triggerCapture') }}</span>
+        <kbd class="kbd-key mr-1">{{ t('header.middleClick') }}</kbd> {{ t('header.or') }} <kbd class="kbd-key ml-1">Ctrl + Shift + M</kbd>
       </div>
     </div>
   </v-sheet>
@@ -91,6 +91,7 @@ import { useProjectStore } from '@/stores/projectStore'
 import { useSessionStore } from '@/stores/sessionStore'
 import { useRouter } from 'vue-router'
 import { searchAll } from '@/services/tauriCommands'
+import { useI18n } from '@/composables/useI18n'
 
 interface SearchItem {
   id: string
@@ -102,6 +103,7 @@ interface SearchItem {
 
 const projectStore = useProjectStore()
 const { activeProject } = storeToRefs(projectStore)
+const { t } = useI18n()
 
 const sessionStore = useSessionStore()
 const { sessions } = storeToRefs(sessionStore)

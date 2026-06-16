@@ -3,9 +3,9 @@
     <!-- Empty State -->
     <div v-if="issues.length === 0" class="d-flex flex-column align-center justify-center py-12 text-center">
       <v-icon size="64" color="medium-emphasis" class="mb-4">mdi-clipboard-text-outline</v-icon>
-      <h3 class="text-h6 font-weight-bold text-white mb-2">No Issues Found</h3>
+      <h3 class="text-h6 font-weight-bold text-white mb-2">{{ t('issueDetail.noIssuesFound') }}</h3>
       <p class="text-body-2 text-medium-emphasis max-width-text">
-        No issues match the active filter criteria or there are no issues recorded in this session.
+        {{ t('issueDetail.noIssuesFilterSub') }}
       </p>
     </div>
 
@@ -33,6 +33,7 @@
 <script setup lang="ts">
 import type { Issue } from '@/types/issue'
 import IssueCard from './IssueCard.vue'
+import { useI18n } from '@/composables/useI18n'
 
 defineProps<{
   issues: Issue[]
@@ -41,6 +42,8 @@ defineProps<{
 defineEmits<{
   (e: 'delete', id: string): void
 }>()
+
+const { t } = useI18n()
 </script>
 
 <style scoped>

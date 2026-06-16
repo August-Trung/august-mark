@@ -12,7 +12,7 @@
 
     <!-- Sidebar controls: project selector / header -->
     <div class="px-4 py-3">
-      <div class="text-overline mb-2 text-medium-emphasis">Active Project</div>
+      <div class="text-overline mb-2 text-medium-emphasis">{{ t('sidebar.activeProject') }}</div>
       <ProjectSelector />
     </div>
 
@@ -22,21 +22,21 @@
     <v-list density="compact" nav class="px-2">
       <v-list-item
         prepend-icon="mdi-view-dashboard"
-        title="Dashboard"
+        :title="t('common.dashboard')"
         value="dashboard"
         to="/"
         color="primary"
       ></v-list-item>
       <v-list-item
         prepend-icon="mdi-cog"
-        title="Settings"
+        :title="t('common.settings')"
         value="settings"
         to="/settings"
         color="primary"
       ></v-list-item>
       <v-list-item
         prepend-icon="mdi-information"
-        title="About"
+        :title="t('common.about')"
         value="about"
         to="/about"
         color="primary"
@@ -47,7 +47,7 @@
 
     <!-- Project List in Sidebar -->
     <div class="px-4 py-2 d-flex align-center justify-space-between">
-      <span class="text-overline text-medium-emphasis">Projects</span>
+      <span class="text-overline text-medium-emphasis">{{ t('sidebar.projects') }}</span>
       <v-btn
         icon="mdi-plus"
         variant="text"
@@ -81,15 +81,15 @@
     <v-dialog v-model="showCreateDialog" max-width="500px">
       <v-card bg-color="surface" class="pa-4">
         <v-card-title class="text-h5 font-weight-bold px-0 text-primary">
-          Create New Project
+          {{ t('sidebar.createNewProject') }}
         </v-card-title>
         <v-card-text class="px-0 py-4">
           <v-form ref="form" v-model="isFormValid" @submit.prevent="handleCreate">
             <v-text-field
               v-model="newProjectName"
-              label="Project Name"
-              placeholder="e.g. August Mark UI Review"
-              :rules="[v => !!v || 'Project name is required']"
+              :label="t('sidebar.projectName')"
+              :placeholder="t('sidebar.projectNamePlaceholder')"
+              :rules="[v => !!v || t('sidebar.projectNameRequired')]"
               variant="outlined"
               density="comfortable"
               class="mb-3"
@@ -98,8 +98,8 @@
 
             <v-textarea
               v-model="newProjectDesc"
-              label="Description (Optional)"
-              placeholder="Provide a brief summary of the project goals"
+              :label="t('sidebar.projectDesc') + ' (' + t('sidebar.optional') + ')'"
+              placeholder=""
               variant="outlined"
               density="comfortable"
               rows="3"
@@ -125,7 +125,7 @@
         <v-card-actions class="px-0">
           <v-spacer></v-spacer>
           <v-btn variant="text" color="medium-emphasis" class="text-none" @click="closeDialog">
-            Cancel
+            {{ t('common.cancel') }}
           </v-btn>
           <v-btn
             variant="elevated"
@@ -135,7 +135,7 @@
             :loading="isLoading"
             @click="handleCreate"
           >
-            Create
+            {{ t('common.create') }}
           </v-btn>
         </v-card-actions>
       </v-card>
@@ -148,8 +148,10 @@ import { ref } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useProjectStore } from '@/stores/projectStore'
 import ProjectSelector from '@/components/dashboard/ProjectSelector.vue'
+import { useI18n } from '@/composables/useI18n'
 
 const projectStore = useProjectStore()
+const { t } = useI18n()
 const { projects, activeProjectId, isLoading } = storeToRefs(projectStore)
 const { selectProject, createProject } = projectStore
 

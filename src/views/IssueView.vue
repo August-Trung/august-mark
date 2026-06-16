@@ -14,7 +14,7 @@
         type="error"
         variant="tonal"
         class="mb-6"
-        title="Failed to load issue"
+        :title="t('issueDetail.failedLoad')"
         :text="error"
       ></v-alert>
 
@@ -29,9 +29,9 @@
     <!-- Delete Issue Confirmation Dialog -->
     <ConfirmDialog
       v-model="showDeleteDialog"
-      title="Delete Issue"
-      message="Are you sure you want to delete this issue? The crop file on disk will also be deleted."
-      confirm-text="Delete"
+      :title="t('dashboardView.deleteIssueTitle')"
+      :message="t('dashboardView.deleteIssueConfirmAll')"
+      :confirm-text="t('common.delete')"
       confirm-color="error"
       @confirm="executeDelete"
     />
@@ -43,10 +43,12 @@ import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { useIssueStore } from '@/stores/issueStore'
+import { useI18n } from '@/composables/useI18n'
 import AppHeader from '@/components/common/AppHeader.vue'
 import IssueDetail from '@/components/dashboard/IssueDetail.vue'
 import ConfirmDialog from '@/components/common/ConfirmDialog.vue'
 
+const { t } = useI18n()
 const route = useRoute()
 const router = useRouter()
 const issueStore = useIssueStore()
