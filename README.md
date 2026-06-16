@@ -6,8 +6,12 @@
 
 ---
 
-## 🚀 Tính năng nổi bật (v0.1.1)
+## 🚀 Tính năng nổi bật (v0.2.0)
 
+- **Đồng bộ Đám mây & Sao lưu Google Drive (Google Drive Cloud Sync):** [NEW] Kết nối tài khoản Google Drive để tự động hoặc thủ công sao lưu cơ sở dữ liệu, ảnh chụp màn hình và ảnh cắt ghi chú lên đám mây, cũng như khôi phục dữ liệu nhanh chóng từ các thời điểm sao lưu trước đó.
+- **Chia sẻ Báo cáo lên Đám mây (Cloud Share Link):** [NEW] Tạo liên kết chia sẻ công khai cho báo cáo session kiểm thử thông qua tệp PDF được đồng bộ tự động lên Google Drive, giúp chuyển tiếp thông tin lỗi cho đồng nghiệp ngay tức thì.
+- **Gói Dữ liệu AI Coding Agent (AACP Exporter):** [NEW] Xuất gói dữ liệu AI Agent Context Pack (.zip hoặc thư mục) chứa mô tả chi tiết lỗi, ảnh chụp, tệp nghi ngờ gây lỗi và thông số Git cục bộ (commit hash, branch, tệp thay đổi) giúp các AI Agent (Cursor, Claude, Gemini, Antigravity) phân tích và sửa lỗi tự động trong thư mục mã nguồn.
+- **Đa ngôn ngữ Giao diện Reactively (i18n):** [NEW] Chuyển đổi linh hoạt và tức thời ngôn ngữ hiển thị (Tiếng Việt / English) cho tất cả màn hình, thanh bên điều hướng, hộp thoại, phím tắt chụp màn hình, nhãn công cụ vẽ và các thông báo Toast mà không cần khởi động lại ứng dụng.
 - **Quản lý Dự án & Phiên làm việc (Project & Session):** Tổ chức các phiên review và chụp ảnh màn hình gọn gàng theo từng dự án riêng biệt.
 - **Công cụ ghi chú phong phú (Advanced Drawing Tools):**
   - **Marker (Ghim số):** Tự động đánh số thứ tự lỗi tăng dần.
