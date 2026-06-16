@@ -93,6 +93,8 @@ pub fn run() {
             commands::gdrive_cmds::restore_from_gdrive,
             commands::gdrive_cmds::list_backups_on_gdrive,
             commands::gdrive_cmds::share_session_on_gdrive,
+            commands::aacp_cmds::export_aacp_pack,
+            commands::aacp_cmds::get_download_dir,
         ])
         .on_window_event(|window, event| {
             if let tauri::WindowEvent::CloseRequested { api, .. } = event {

@@ -277,3 +277,31 @@ export async function listBackupsOnGdrive(): Promise<[string, string][]> {
 export async function shareSessionOnGdrive(sessionId: string): Promise<string> {
   return invoke<string>('share_session_on_gdrive', { sessionId })
 }
+
+// ============================================================================
+// AI Agent Context Pack Exporter Commands
+// ============================================================================
+
+export async function exportAacpPack(
+  sessionId: string,
+  issueId: string,
+  workspacePath: string,
+  suspectedFiles: string[],
+  outputDir: string,
+  compressZip: boolean
+): Promise<string> {
+  return invoke<string>('export_aacp_pack', {
+    sessionId,
+    issueId,
+    workspacePath,
+    suspectedFiles,
+    outputDir,
+    compressZip
+  })
+}
+
+export async function getDownloadDir(): Promise<string> {
+  return invoke<string>('get_download_dir')
+}
+
+

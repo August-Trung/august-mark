@@ -5,3 +5,7 @@ pub mod export_service;
 pub mod mouse_hook;
 pub mod gdrive_client;
 pub mod backup_service;
+pub mod git_inspector;
+pub mod aacp_exporter;
+
+

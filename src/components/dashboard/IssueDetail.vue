@@ -12,15 +12,27 @@
         Back to Session
       </v-btn>
 
-      <v-btn
-        color="error"
-        variant="outlined"
-        prepend-icon="mdi-delete"
-        class="text-none"
-        @click="confirmDelete"
-      >
-        Delete Issue
-      </v-btn>
+      <div class="d-flex gap-2">
+        <v-btn
+          color="primary"
+          variant="flat"
+          prepend-icon="mdi-robot"
+          class="text-none"
+          @click="showExportDialog = true"
+        >
+          AI Fix Context Pack
+        </v-btn>
+
+        <v-btn
+          color="error"
+          variant="outlined"
+          prepend-icon="mdi-delete"
+          class="text-none"
+          @click="confirmDelete"
+        >
+          Delete Issue
+        </v-btn>
+      </div>
     </div>
 
     <!-- Layout Grid -->
@@ -178,6 +190,14 @@
         </v-card>
       </v-col>
     </v-row>
+
+    <!-- Export Dialog for AI Context Pack -->
+    <ExportDialog
+      v-model="showExportDialog"
+      :session-id="issue.sessionId"
+      :session-title="sessionTitle"
+      :issue-id="issue.id"
+    />
   </v-card>
 </template>
 
@@ -187,9 +207,10 @@ import { useRouter } from 'vue-router'
 import { convertFileSrc } from '@tauri-apps/api/core'
 import { useIssueStore } from '@/stores/issueStore'
 import { useTagStore } from '@/stores/tagStore'
-import { getCapture } from '@/services/tauriCommands'
+import { getCapture, getSession } from '@/services/tauriCommands'
 import type { Issue } from '@/types/issue'
 import { formatDateTime as formatDate } from '@/utils/date'
+import ExportDialog from '@/components/export/ExportDialog.vue'
 
 const props = defineProps<{
   issue: Issue
@@ -202,6 +223,20 @@ const emit = defineEmits<{
 const router = useRouter()
 const issueStore = useIssueStore()
 const tagStore = useTagStore()
+
+const showExportDialog = ref(false)
+const sessionTitle = ref('Session Report')
+
+watch(() => props.issue.sessionId, async (newId) => {
+  if (newId) {
+    try {
+      const session = await getSession(newId)
+      sessionTitle.value = session.title
+    } catch (err) {
+      console.error('Failed to load session details:', err)
+    }
+  }
+}, { immediate: true })
 
 tagStore.loadTags()
 
@@ -327,5 +362,9 @@ const autoSave = async () => {
 .sticky-panel {
   position: sticky;
   top: 24px;
+}
+
+.gap-2 {
+  gap: 8px;
 }
 </style>

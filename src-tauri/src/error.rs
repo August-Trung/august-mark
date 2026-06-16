@@ -43,4 +43,11 @@ impl Serialize for AppError {
     }
 }
 
+impl From<std::io::Error> for AppError {
+    fn from(err: std::io::Error) -> Self {
+        AppError::FileIO(err.to_string())
+    }
+}
+
 pub type AppResult<T> = std::result::Result<T, AppError>;
+
