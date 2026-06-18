@@ -488,8 +488,8 @@ html {
   width: 100vw !important;
   height: 100vh !important;
   overflow: hidden !important;
-  background: transparent !important;
-  background-color: transparent !important;
+  background: #121212 !important;
+  background-color: #121212 !important;
 }
 
 body {
@@ -498,8 +498,8 @@ body {
   width: 100vw !important;
   height: 100vh !important;
   overflow: hidden !important;
-  background: transparent !important;
-  background-color: transparent !important;
+  background: #121212 !important;
+  background-color: #121212 !important;
 }
 
 #app {
@@ -507,13 +507,13 @@ body {
   padding: 0;
   width: 100vw;
   height: 100vh;
-  background: transparent !important;
-  background-color: transparent !important;
+  background: #121212 !important;
+  background-color: #121212 !important;
 }
 
 .v-application {
-  background: transparent !important;
-  background-color: transparent !important;
+  background: #121212 !important;
+  background-color: #121212 !important;
 }
 
 .v-application__wrap {
