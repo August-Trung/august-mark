@@ -76,23 +76,35 @@
       ></v-combobox>
     </v-form>
 
-    <div class="panel-footer">
-      <v-btn
-        color="secondary"
-        variant="outlined"
-        class="flex-grow-1"
-        @click="handleCancel"
-      >
-        {{ t('overlay.discard') }}
-      </v-btn>
+    <div class="panel-footer d-flex flex-column gap-2">
+      <div class="d-flex gap-2 w-100">
+        <v-btn
+          color="secondary"
+          variant="outlined"
+          class="flex-grow-1 text-none"
+          @click="handleCancel"
+        >
+          {{ t('overlay.discard') }}
+        </v-btn>
+        <v-btn
+          color="primary"
+          variant="flat"
+          class="flex-grow-1 text-none"
+          :disabled="!isFormValid"
+          @click="handleSave"
+        >
+          {{ t('overlay.saveIssue') }}
+        </v-btn>
+      </div>
       <v-btn
         color="primary"
-        variant="flat"
-        class="flex-grow-1"
+        variant="tonal"
+        class="w-100 text-none"
+        prepend-icon="mdi-content-copy"
         :disabled="!isFormValid"
-        @click="handleSave"
+        @click="handleCopy"
       >
-        {{ t('overlay.saveIssue') }}
+        {{ t('issueDetail.copyImage') }}
       </v-btn>
     </div>
   </v-navigation-drawer>
@@ -103,6 +115,10 @@ import { ref, computed, watch } from 'vue'
 import { useOverlayStore } from '@/stores/overlayStore'
 import { useTagStore } from '@/stores/tagStore'
 import { useI18n } from '@/composables/useI18n'
+
+const emit = defineEmits<{
+  (e: 'copy', payload: { title: string; description: string; severity: string }): void
+}>()
 
 const overlayStore = useOverlayStore()
 const tagStore = useTagStore()
@@ -195,6 +211,15 @@ const handleCancel = () => {
   // Discard pending annotation
   overlayStore.pendingAnnotation = null
   overlayStore.showIssueForm = false
+}
+
+const handleCopy = () => {
+  if (formRef.value && !isFormValid.value) return
+  emit('copy', {
+    title: title.value,
+    description: description.value,
+    severity: severity.value
+  })
 }
 </script>
 

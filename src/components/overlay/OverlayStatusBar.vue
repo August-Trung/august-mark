@@ -26,6 +26,15 @@
         <i class="mdi mdi-redo"></i>
       </button>
 
+      <button
+        type="button"
+        class="btn-copy mr-2"
+        :title="t('issueDetail.copyImage') + ' (Ctrl+C)'"
+        @click="$emit('copy')"
+      >
+        <i class="mdi mdi-content-copy mr-1"></i> {{ t('issueDetail.copyImage') }}
+      </button>
+
       <button class="btn-cancel" @click="$emit('cancel')">
         {{ t('overlay.discard') }} <kbd>Esc</kbd>
       </button>
@@ -49,6 +58,7 @@ defineProps<{
 defineEmits<{
   (e: 'cancel'): void
   (e: 'done'): void
+  (e: 'copy'): void
 }>()
 
 const overlayStore = useOverlayStore()
@@ -64,7 +74,7 @@ const canRedo = computed(() => overlayStore.redoStack.length > 0)
   left: 50%;
   transform: translateX(-50%);
   height: 48px;
-  min-width: 500px;
+  min-width: 580px; /* Slightly wider to accommodate copy button */
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -124,6 +134,7 @@ const canRedo = computed(() => overlayStore.redoStack.length > 0)
 
 /* Buttons */
 .btn-cancel,
+.btn-copy,
 .btn-done {
   border: none;
   border-radius: 6px;
@@ -136,13 +147,21 @@ const canRedo = computed(() => overlayStore.redoStack.length > 0)
   line-height: 1;
 }
 
-.btn-cancel {
+.btn-cancel,
+.btn-copy {
   background: rgba(255, 255, 255, 0.08);
   color: #E8E8E8;
   border: 1px solid rgba(255, 255, 255, 0.12);
 }
 
-.btn-cancel:hover {
+.btn-copy {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.btn-cancel:hover,
+.btn-copy:hover {
   background: rgba(255, 255, 255, 0.14);
   transform: translateY(-1px);
 }

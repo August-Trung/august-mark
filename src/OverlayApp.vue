@@ -7,6 +7,7 @@
         :issue-count="issueCount"
         @cancel="handleCancel"
         @done="handleDone"
+        @copy="handleGlobalCopy"
       />
 
       <!-- Fullscreen screenshot and drawing canvas -->
@@ -28,7 +29,7 @@
       <AnnotationToolbar />
 
       <!-- Right side slide-in issue form -->
-      <IssueFormPanel />
+      <IssueFormPanel @copy="handleIssueCopy" />
     </div>
   </v-app>
 </template>
@@ -43,6 +44,7 @@ import AnnotationCanvas from '@/components/overlay/AnnotationCanvas.vue'
 import AnnotationToolbar from '@/components/overlay/AnnotationToolbar.vue'
 import IssueFormPanel from '@/components/overlay/IssueFormPanel.vue'
 import { useOverlayStore } from '@/stores/overlayStore'
+import { useUiStore } from '@/stores/uiStore'
 import { useI18n } from '@/composables/useI18n'
 import type { Capture } from '@/types/capture'
 
@@ -146,6 +148,9 @@ const handleKeyDown = (e: KeyboardEvent) => {
     } else if (e.key.toLowerCase() === 'y') {
       e.preventDefault()
       overlayStore.redo()
+    } else if (e.key.toLowerCase() === 'c') {
+      e.preventDefault()
+      handleGlobalCopy()
     }
     return
   }
@@ -226,6 +231,208 @@ const handleDone = async () => {
   } catch (e: any) {
     console.error('[OverlayApp] Failed to save annotations:', e?.message || e, e?.stack || '')
   }
+}
+
+const isCopying = ref(false)
+
+const copyAnnotatedImage = async (metadata?: { title: string; description: string; severity: string; markerNumber: number }) => {
+  if (isCopying.value) return
+  isCopying.value = true
+  const uiStore = useUiStore()
+
+  try {
+    if (!annotationCanvasRef.value) throw new Error('Canvas ref not found')
+    
+    let screenshotCanvas = annotationCanvasRef.value.screenshotCanvasRef
+    let markerCanvas = annotationCanvasRef.value.markerCanvasRef
+    
+    if (screenshotCanvas && typeof screenshotCanvas === 'object' && 'value' in screenshotCanvas) {
+      screenshotCanvas = screenshotCanvas.value
+    }
+    if (markerCanvas && typeof markerCanvas === 'object' && 'value' in markerCanvas) {
+      markerCanvas = markerCanvas.value
+    }
+
+    if (!screenshotCanvas || !markerCanvas) {
+      throw new Error('Canvases not initialized')
+    }
+
+    // Merge both canvases
+    const tempCanvas = document.createElement('canvas')
+    tempCanvas.width = screenshotCanvas.width
+    tempCanvas.height = screenshotCanvas.height
+    const tempCtx = tempCanvas.getContext('2d')
+    if (!tempCtx) throw new Error('Could not get temp canvas context')
+
+    tempCtx.drawImage(screenshotCanvas, 0, 0)
+    tempCtx.drawImage(markerCanvas, 0, 0)
+
+    let finalCanvas = tempCanvas
+
+    // If metadata is provided, draw the card footer (similar to IssueDetail.vue)
+    if (metadata) {
+      const width = tempCanvas.width
+      const height = tempCanvas.height
+
+      // Proportional sizing based on the screenshot width
+      const footerHeight = Math.max(90, Math.round(width * 0.08))
+      const fontSizeTitle = Math.max(16, Math.round(footerHeight * 0.22))
+      const fontSizeDesc = Math.max(12, Math.round(footerHeight * 0.16))
+      const padding = Math.round(footerHeight * 0.15)
+
+      finalCanvas = document.createElement('canvas')
+      finalCanvas.width = width
+      finalCanvas.height = height + footerHeight
+      const finalCtx = finalCanvas.getContext('2d')
+      if (!finalCtx) throw new Error('Could not get final canvas context')
+
+      // Draw the merged image
+      finalCtx.drawImage(tempCanvas, 0, 0)
+
+      // Draw dark footer background
+      finalCtx.fillStyle = '#1A1D27'
+      finalCtx.fillRect(0, height, width, footerHeight)
+
+      // Draw border
+      finalCtx.strokeStyle = 'rgba(255, 255, 255, 0.08)'
+      finalCtx.lineWidth = Math.max(1, Math.round(width * 0.001))
+      finalCtx.beginPath()
+      finalCtx.moveTo(0, height)
+      finalCtx.lineTo(width, height)
+      finalCtx.stroke()
+
+      // Draw marker circle
+      const markerRadius = Math.max(12, Math.round(footerHeight * 0.18))
+      const markerX = padding + markerRadius
+      const markerY = height + padding + markerRadius
+      finalCtx.fillStyle = '#FF6B35' // Primary accent
+      finalCtx.beginPath()
+      finalCtx.arc(markerX, markerY, markerRadius, 0, Math.PI * 2)
+      finalCtx.fill()
+
+      // Draw marker text
+      finalCtx.fillStyle = '#FFFFFF'
+      finalCtx.font = `bold ${Math.round(markerRadius * 1.1)}px sans-serif`
+      finalCtx.textAlign = 'center'
+      finalCtx.textBaseline = 'middle'
+      finalCtx.fillText(String(metadata.markerNumber), markerX, markerY)
+
+      // Draw Title
+      const titleX = markerX + markerRadius + padding
+      const titleY = height + padding + (markerRadius * 0.6)
+      finalCtx.fillStyle = '#FFFFFF'
+      finalCtx.font = `bold ${fontSizeTitle}px sans-serif`
+      finalCtx.textAlign = 'left'
+      finalCtx.textBaseline = 'top'
+      
+      const titleText = metadata.title || 'Issue'
+      finalCtx.fillText(titleText, titleX, titleY)
+
+      // Draw Severity Tag
+      const titleWidth = finalCtx.measureText(titleText).width
+      const tagX = titleX + titleWidth + padding
+      const tagY = titleY
+      const tagHeight = fontSizeTitle * 1.2
+      
+      finalCtx.font = `bold ${Math.round(fontSizeTitle * 0.75)}px sans-serif`
+      const tagText = metadata.severity.toUpperCase()
+      const tagTextWidth = finalCtx.measureText(tagText).width
+      const tagPadding = Math.round(fontSizeTitle * 0.4)
+      const tagWidth = tagTextWidth + tagPadding * 2
+
+      finalCtx.fillStyle = metadata.severity === 'Critical' ? '#FF4757' : 
+                          metadata.severity === 'Major' ? '#FFA502' : 
+                          metadata.severity === 'Minor' ? '#2ED573' : '#3742FA'
+      
+      const radius = Math.round(tagHeight * 0.25)
+      finalCtx.beginPath()
+      if (finalCtx.roundRect) {
+        finalCtx.roundRect(tagX, tagY, tagWidth, tagHeight, radius)
+      } else {
+        finalCtx.rect(tagX, tagY, tagWidth, tagHeight)
+      }
+      finalCtx.fill()
+
+      finalCtx.fillStyle = '#FFFFFF'
+      finalCtx.textAlign = 'center'
+      finalCtx.textBaseline = 'middle'
+      finalCtx.fillText(tagText, tagX + tagWidth / 2, tagY + tagHeight / 2)
+
+      // Draw Description
+      const descX = titleX
+      const descY = titleY + fontSizeTitle + padding * 0.8
+      finalCtx.fillStyle = '#A0A5B5' // Muted text
+      finalCtx.font = `${fontSizeDesc}px sans-serif`
+      finalCtx.textAlign = 'left'
+      finalCtx.textBaseline = 'top'
+
+      const maxTextWidth = width - descX - padding
+      const descText = metadata.description || t('common.noDescription')
+
+      // Word wrapping with manual newlines support
+      const paragraphs = descText.split('\n')
+      const lines: string[] = []
+      
+      for (const paragraph of paragraphs) {
+        const words = paragraph.split(' ')
+        let line = ''
+        for (let n = 0; n < words.length; n++) {
+          const testLine = line + words[n] + ' '
+          const metrics = finalCtx.measureText(testLine)
+          const testWidth = metrics.width
+          if (testWidth > maxTextWidth && n > 0) {
+            lines.push(line)
+            line = words[n] + ' '
+          } else {
+            line = testLine
+          }
+        }
+        lines.push(line)
+      }
+
+      const maxLines = 2
+      for (let i = 0; i < Math.min(lines.length, maxLines); i++) {
+        let lineText = lines[i]
+        if (i === maxLines - 1 && lines.length > maxLines) {
+          lineText = lineText.trim().substring(0, Math.max(0, lineText.length - 4)) + '...'
+        }
+        finalCtx.fillText(lineText, descX, descY + (i * (fontSizeDesc + padding * 0.4)))
+      }
+    }
+
+    // Convert to blob and write to clipboard
+    const blob: Blob | null = await new Promise((resolve) => finalCanvas.toBlob(resolve, 'image/png'))
+    if (!blob) throw new Error('Could not create blob')
+
+    await navigator.clipboard.write([
+      new ClipboardItem({
+        [blob.type]: blob
+      })
+    ])
+
+    uiStore.showToast({
+      message: metadata ? t('issueDetail.copyImageSuccess') : t('issueDetail.copyImageSuccessSimple'),
+      type: 'success'
+    })
+  } catch (err: any) {
+    console.error('[OverlayApp] Failed to copy image:', err)
+    uiStore.showToast({ message: t('issueDetail.copyImageError'), type: 'error' })
+  } finally {
+    isCopying.value = false
+  }
+}
+
+const handleGlobalCopy = () => {
+  copyAnnotatedImage()
+}
+
+const handleIssueCopy = (payload: { title: string; description: string; severity: string }) => {
+  copyAnnotatedImage({
+    title: payload.title,
+    description: payload.description,
+    severity: payload.severity,
+    markerNumber: overlayStore.nextMarkerNumber
+  })
 }
 
 onMounted(async () => {
