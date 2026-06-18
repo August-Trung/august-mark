@@ -360,11 +360,11 @@ const copyImageToClipboard = async () => {
     const width = img.naturalWidth
     const height = img.naturalHeight
 
-    // Proportional sizing based on the screenshot width
-    const footerHeight = Math.max(90, Math.round(width * 0.08))
-    const fontSizeTitle = Math.max(16, Math.round(footerHeight * 0.22))
-    const fontSizeDesc = Math.max(12, Math.round(footerHeight * 0.16))
-    const padding = Math.round(footerHeight * 0.15)
+    // Proportional sizing based on the screenshot width (optimized to fit descriptions)
+    const footerHeight = Math.max(90, Math.round(width * 0.09))
+    const fontSizeTitle = Math.max(14, Math.round(footerHeight * 0.20))
+    const fontSizeDesc = Math.max(11, Math.round(footerHeight * 0.14))
+    const padding = Math.round(footerHeight * 0.14)
 
     canvas.width = width
     canvas.height = height + footerHeight
@@ -400,29 +400,44 @@ const copyImageToClipboard = async () => {
     ctx.textBaseline = 'middle'
     ctx.fillText(String(props.issue.markerNumber), markerX, markerY)
 
-    // Draw Title
-    const titleX = markerX + markerRadius + padding
-    const titleY = height + padding + (markerRadius * 0.6)
-    ctx.fillStyle = '#FFFFFF'
-    ctx.font = `bold ${fontSizeTitle}px sans-serif`
-    ctx.textAlign = 'left'
-    ctx.textBaseline = 'top'
-    
-    const titleText = title.value || 'Issue'
-    ctx.fillText(titleText, titleX, titleY)
-
-    // Draw Severity Tag
-    const titleWidth = ctx.measureText(titleText).width
-    const tagX = titleX + titleWidth + padding
-    const tagY = titleY
-    const tagHeight = fontSizeTitle * 1.2
-    
+    // 1. Calculate Severity Tag width first to compute maximum allowed title width
     ctx.font = `bold ${Math.round(fontSizeTitle * 0.75)}px sans-serif`
     const tagText = severity.value.toUpperCase()
     const tagTextWidth = ctx.measureText(tagText).width
     const tagPadding = Math.round(fontSizeTitle * 0.4)
     const tagWidth = tagTextWidth + tagPadding * 2
 
+    // 2. Setup Title font
+    ctx.font = `bold ${fontSizeTitle}px sans-serif`
+    
+    const titleX = markerX + markerRadius + padding
+    const titleY = height + padding + (markerRadius * 0.6)
+    
+    let titleText = title.value || 'Issue'
+    const maxTitleWidth = width - titleX - tagWidth - padding * 2
+    
+    // Truncate title if it exceeds the maximum allowed width to prevent overlaps
+    const titleMetrics = ctx.measureText(titleText)
+    if (titleMetrics.width > maxTitleWidth) {
+      while (titleText.length > 0 && ctx.measureText(titleText + '...').width > maxTitleWidth) {
+        titleText = titleText.slice(0, -1)
+      }
+      titleText = titleText + '...'
+    }
+    
+    // Draw Title
+    ctx.fillStyle = '#FFFFFF'
+    ctx.textAlign = 'left'
+    ctx.textBaseline = 'top'
+    ctx.fillText(titleText, titleX, titleY)
+
+    // 3. Draw Severity Tag next to the title
+    const titleWidth = ctx.measureText(titleText).width
+    const tagX = titleX + titleWidth + padding
+    const tagY = titleY
+    const tagHeight = fontSizeTitle * 1.2
+    
+    ctx.font = `bold ${Math.round(fontSizeTitle * 0.75)}px sans-serif`
     ctx.fillStyle = severity.value === 'Critical' ? '#FF4757' : 
                     severity.value === 'Major' ? '#FFA502' : 
                     severity.value === 'Minor' ? '#2ED573' : '#3742FA'

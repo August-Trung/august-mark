@@ -30,6 +30,24 @@
 
       <!-- Right side slide-in issue form -->
       <IssueFormPanel @copy="handleIssueCopy" />
+
+      <!-- Global Snackbar for Toasts in Overlay Window -->
+      <v-snackbar
+        v-model="uiStore.toastVisible"
+        :color="toastColor"
+        location="bottom right"
+        :timeout="-1"
+        class="mb-4 mr-4"
+        style="z-index: 20000;"
+      >
+        <div class="d-flex align-center gap-2">
+          <v-icon :icon="toastIcon" size="small"></v-icon>
+          <span>{{ uiStore.toastMessage }}</span>
+        </div>
+        <template v-slot:actions>
+          <v-btn icon="mdi-close" variant="text" size="small" @click="uiStore.hideToast"></v-btn>
+        </template>
+      </v-snackbar>
     </div>
   </v-app>
 </template>
@@ -48,6 +66,7 @@ import { useUiStore } from '@/stores/uiStore'
 import { useI18n } from '@/composables/useI18n'
 import type { Capture } from '@/types/capture'
 
+const uiStore = useUiStore()
 const { t } = useI18n()
 const overlayStore = useOverlayStore()
 const annotationCanvasRef = ref<any>(null)
@@ -58,6 +77,24 @@ const screenshotUrl = ref<string>('')
 const sessionName = ref<string>('Quick Review')
 const issueCount = computed(() => overlayStore.annotations.length)
 const loadError = ref<string | null>(null)
+
+const toastColor = computed(() => {
+  switch (uiStore.toastType) {
+    case 'success': return 'success'
+    case 'error': return 'error'
+    case 'info': return 'info'
+    default: return 'info'
+  }
+})
+
+const toastIcon = computed(() => {
+  switch (uiStore.toastType) {
+    case 'success': return 'mdi-check-circle'
+    case 'error': return 'mdi-alert-circle'
+    case 'info': return 'mdi-information'
+    default: return 'mdi-information'
+  }
+})
 
 let unlistenInit: (() => void) | null = null
 let hasShownOverlay = false
@@ -283,136 +320,151 @@ const copyAnnotatedImage = async (metadata?: { title: string; description: strin
 
     let finalCanvas = tempCanvas
 
-    // If metadata is provided, draw the card footer (similar to IssueDetail.vue)
-    if (metadata) {
-      const width = tempCanvas.width
-      const height = tempCanvas.height
+      // If metadata is provided, draw the card footer (similar to IssueDetail.vue)
+      if (metadata) {
+        const width = tempCanvas.width
+        const height = tempCanvas.height
 
-      // Proportional sizing based on the screenshot width
-      const footerHeight = Math.max(90, Math.round(width * 0.08))
-      const fontSizeTitle = Math.max(16, Math.round(footerHeight * 0.22))
-      const fontSizeDesc = Math.max(12, Math.round(footerHeight * 0.16))
-      const padding = Math.round(footerHeight * 0.15)
+        // Proportional sizing based on the screenshot width (optimized to fit descriptions)
+        const footerHeight = Math.max(90, Math.round(width * 0.09))
+        const fontSizeTitle = Math.max(14, Math.round(footerHeight * 0.20))
+        const fontSizeDesc = Math.max(11, Math.round(footerHeight * 0.14))
+        const padding = Math.round(footerHeight * 0.14)
 
-      finalCanvas = document.createElement('canvas')
-      finalCanvas.width = width
-      finalCanvas.height = height + footerHeight
-      const finalCtx = finalCanvas.getContext('2d')
-      if (!finalCtx) throw new Error('Could not get final canvas context')
+        finalCanvas = document.createElement('canvas')
+        finalCanvas.width = width
+        finalCanvas.height = height + footerHeight
+        const finalCtx = finalCanvas.getContext('2d')
+        if (!finalCtx) throw new Error('Could not get final canvas context')
 
-      // Draw the merged image
-      finalCtx.drawImage(tempCanvas, 0, 0)
+        // Draw the merged image
+        finalCtx.drawImage(tempCanvas, 0, 0)
 
-      // Draw dark footer background
-      finalCtx.fillStyle = '#1A1D27'
-      finalCtx.fillRect(0, height, width, footerHeight)
+        // Draw dark footer background
+        finalCtx.fillStyle = '#1A1D27'
+        finalCtx.fillRect(0, height, width, footerHeight)
 
-      // Draw border
-      finalCtx.strokeStyle = 'rgba(255, 255, 255, 0.08)'
-      finalCtx.lineWidth = Math.max(1, Math.round(width * 0.001))
-      finalCtx.beginPath()
-      finalCtx.moveTo(0, height)
-      finalCtx.lineTo(width, height)
-      finalCtx.stroke()
+        // Draw border
+        finalCtx.strokeStyle = 'rgba(255, 255, 255, 0.08)'
+        finalCtx.lineWidth = Math.max(1, Math.round(width * 0.001))
+        finalCtx.beginPath()
+        finalCtx.moveTo(0, height)
+        finalCtx.lineTo(width, height)
+        finalCtx.stroke()
 
-      // Draw marker circle
-      const markerRadius = Math.max(12, Math.round(footerHeight * 0.18))
-      const markerX = padding + markerRadius
-      const markerY = height + padding + markerRadius
-      finalCtx.fillStyle = '#FF6B35' // Primary accent
-      finalCtx.beginPath()
-      finalCtx.arc(markerX, markerY, markerRadius, 0, Math.PI * 2)
-      finalCtx.fill()
+        // Draw marker circle
+        const markerRadius = Math.max(12, Math.round(footerHeight * 0.18))
+        const markerX = padding + markerRadius
+        const markerY = height + padding + markerRadius
+        finalCtx.fillStyle = '#FF6B35' // Primary accent
+        finalCtx.beginPath()
+        finalCtx.arc(markerX, markerY, markerRadius, 0, Math.PI * 2)
+        finalCtx.fill()
 
-      // Draw marker text
-      finalCtx.fillStyle = '#FFFFFF'
-      finalCtx.font = `bold ${Math.round(markerRadius * 1.1)}px sans-serif`
-      finalCtx.textAlign = 'center'
-      finalCtx.textBaseline = 'middle'
-      finalCtx.fillText(String(metadata.markerNumber), markerX, markerY)
+        // Draw marker text
+        finalCtx.fillStyle = '#FFFFFF'
+        finalCtx.font = `bold ${Math.round(markerRadius * 1.1)}px sans-serif`
+        finalCtx.textAlign = 'center'
+        finalCtx.textBaseline = 'middle'
+        finalCtx.fillText(String(metadata.markerNumber), markerX, markerY)
 
-      // Draw Title
-      const titleX = markerX + markerRadius + padding
-      const titleY = height + padding + (markerRadius * 0.6)
-      finalCtx.fillStyle = '#FFFFFF'
-      finalCtx.font = `bold ${fontSizeTitle}px sans-serif`
-      finalCtx.textAlign = 'left'
-      finalCtx.textBaseline = 'top'
-      
-      const titleText = metadata.title || 'Issue'
-      finalCtx.fillText(titleText, titleX, titleY)
+        // 1. Calculate Severity Tag width first to compute maximum allowed title width
+        finalCtx.font = `bold ${Math.round(fontSizeTitle * 0.75)}px sans-serif`
+        const tagText = metadata.severity.toUpperCase()
+        const tagTextWidth = finalCtx.measureText(tagText).width
+        const tagPadding = Math.round(fontSizeTitle * 0.4)
+        const tagWidth = tagTextWidth + tagPadding * 2
 
-      // Draw Severity Tag
-      const titleWidth = finalCtx.measureText(titleText).width
-      const tagX = titleX + titleWidth + padding
-      const tagY = titleY
-      const tagHeight = fontSizeTitle * 1.2
-      
-      finalCtx.font = `bold ${Math.round(fontSizeTitle * 0.75)}px sans-serif`
-      const tagText = metadata.severity.toUpperCase()
-      const tagTextWidth = finalCtx.measureText(tagText).width
-      const tagPadding = Math.round(fontSizeTitle * 0.4)
-      const tagWidth = tagTextWidth + tagPadding * 2
-
-      finalCtx.fillStyle = metadata.severity === 'Critical' ? '#FF4757' : 
-                          metadata.severity === 'Major' ? '#FFA502' : 
-                          metadata.severity === 'Minor' ? '#2ED573' : '#3742FA'
-      
-      const radius = Math.round(tagHeight * 0.25)
-      finalCtx.beginPath()
-      if (finalCtx.roundRect) {
-        finalCtx.roundRect(tagX, tagY, tagWidth, tagHeight, radius)
-      } else {
-        finalCtx.rect(tagX, tagY, tagWidth, tagHeight)
-      }
-      finalCtx.fill()
-
-      finalCtx.fillStyle = '#FFFFFF'
-      finalCtx.textAlign = 'center'
-      finalCtx.textBaseline = 'middle'
-      finalCtx.fillText(tagText, tagX + tagWidth / 2, tagY + tagHeight / 2)
-
-      // Draw Description
-      const descX = titleX
-      const descY = titleY + fontSizeTitle + padding * 0.8
-      finalCtx.fillStyle = '#A0A5B5' // Muted text
-      finalCtx.font = `${fontSizeDesc}px sans-serif`
-      finalCtx.textAlign = 'left'
-      finalCtx.textBaseline = 'top'
-
-      const maxTextWidth = width - descX - padding
-      const descText = metadata.description || t('common.noDescription')
-
-      // Word wrapping with manual newlines support
-      const paragraphs = descText.split('\n')
-      const lines: string[] = []
-      
-      for (const paragraph of paragraphs) {
-        const words = paragraph.split(' ')
-        let line = ''
-        for (let n = 0; n < words.length; n++) {
-          const testLine = line + words[n] + ' '
-          const metrics = finalCtx.measureText(testLine)
-          const testWidth = metrics.width
-          if (testWidth > maxTextWidth && n > 0) {
-            lines.push(line)
-            line = words[n] + ' '
-          } else {
-            line = testLine
+        // 2. Setup Title font
+        finalCtx.font = `bold ${fontSizeTitle}px sans-serif`
+        
+        const titleX = markerX + markerRadius + padding
+        const titleY = height + padding + (markerRadius * 0.6)
+        
+        let titleText = metadata.title || 'Issue'
+        const maxTitleWidth = width - titleX - tagWidth - padding * 2
+        
+        // Truncate title if it exceeds the maximum allowed width to prevent overlaps
+        const titleMetrics = finalCtx.measureText(titleText)
+        if (titleMetrics.width > maxTitleWidth) {
+          while (titleText.length > 0 && finalCtx.measureText(titleText + '...').width > maxTitleWidth) {
+            titleText = titleText.slice(0, -1)
           }
+          titleText = titleText + '...'
         }
-        lines.push(line)
-      }
+        
+        // Draw Title
+        finalCtx.fillStyle = '#FFFFFF'
+        finalCtx.textAlign = 'left'
+        finalCtx.textBaseline = 'top'
+        finalCtx.fillText(titleText, titleX, titleY)
 
-      const maxLines = 2
-      for (let i = 0; i < Math.min(lines.length, maxLines); i++) {
-        let lineText = lines[i]
-        if (i === maxLines - 1 && lines.length > maxLines) {
-          lineText = lineText.trim().substring(0, Math.max(0, lineText.length - 4)) + '...'
+        // 3. Draw Severity Tag next to the title
+        const titleWidth = finalCtx.measureText(titleText).width
+        const tagX = titleX + titleWidth + padding
+        const tagY = titleY
+        const tagHeight = fontSizeTitle * 1.2
+        
+        finalCtx.font = `bold ${Math.round(fontSizeTitle * 0.75)}px sans-serif`
+        finalCtx.fillStyle = metadata.severity === 'Critical' ? '#FF4757' : 
+                            metadata.severity === 'Major' ? '#FFA502' : 
+                            metadata.severity === 'Minor' ? '#2ED573' : '#3742FA'
+        
+        const radius = Math.round(tagHeight * 0.25)
+        finalCtx.beginPath()
+        if (finalCtx.roundRect) {
+          finalCtx.roundRect(tagX, tagY, tagWidth, tagHeight, radius)
+        } else {
+          finalCtx.rect(tagX, tagY, tagWidth, tagHeight)
         }
-        finalCtx.fillText(lineText, descX, descY + (i * (fontSizeDesc + padding * 0.4)))
+        finalCtx.fill()
+
+        finalCtx.fillStyle = '#FFFFFF'
+        finalCtx.textAlign = 'center'
+        finalCtx.textBaseline = 'middle'
+        finalCtx.fillText(tagText, tagX + tagWidth / 2, tagY + tagHeight / 2)
+
+        // Draw Description
+        const descX = titleX
+        const descY = titleY + fontSizeTitle + padding * 0.8
+        finalCtx.fillStyle = '#A0A5B5' // Muted text
+        finalCtx.font = `${fontSizeDesc}px sans-serif`
+        finalCtx.textAlign = 'left'
+        finalCtx.textBaseline = 'top'
+
+        const maxTextWidth = width - descX - padding
+        const descText = metadata.description || t('common.noDescription')
+
+        // Word wrapping with manual newlines support
+        const paragraphs = descText.split('\n')
+        const lines: string[] = []
+        
+        for (const paragraph of paragraphs) {
+          const words = paragraph.split(' ')
+          let line = ''
+          for (let n = 0; n < words.length; n++) {
+            const testLine = line + words[n] + ' '
+            const metrics = finalCtx.measureText(testLine)
+            const testWidth = metrics.width
+            if (testWidth > maxTextWidth && n > 0) {
+              lines.push(line)
+              line = words[n] + ' '
+            } else {
+              line = testLine
+            }
+          }
+          lines.push(line)
+        }
+
+        const maxLines = 2
+        for (let i = 0; i < Math.min(lines.length, maxLines); i++) {
+          let lineText = lines[i]
+          if (i === maxLines - 1 && lines.length > maxLines) {
+            lineText = lineText.trim().substring(0, Math.max(0, lineText.length - 4)) + '...'
+          }
+          finalCtx.fillText(lineText, descX, descY + (i * (fontSizeDesc + padding * 0.4)))
+        }
       }
-    }
 
     // Convert to blob and write to clipboard
     const blob: Blob | null = await new Promise((resolve) => finalCanvas.toBlob(resolve, 'image/png'))
@@ -437,7 +489,16 @@ const copyAnnotatedImage = async (metadata?: { title: string; description: strin
 }
 
 const handleGlobalCopy = () => {
-  copyAnnotatedImage()
+  if (overlayStore.showIssueForm) {
+    copyAnnotatedImage({
+      title: overlayStore.currentFormTitle,
+      description: overlayStore.currentFormDescription,
+      severity: overlayStore.currentFormSeverity,
+      markerNumber: overlayStore.nextMarkerNumber
+    })
+  } else {
+    copyAnnotatedImage()
+  }
 }
 
 const handleIssueCopy = (payload: { title: string; description: string; severity: string }) => {

@@ -24,6 +24,11 @@ export const useOverlayStore = defineStore('overlay', () => {
   // Pending annotation state for T3.08
   const pendingAnnotation = ref<Annotation | null>(null)
   const showIssueForm = ref<boolean>(false)
+  
+  // Current active form inputs for copy-with-metadata accessibility
+  const currentFormTitle = ref<string>('')
+  const currentFormDescription = ref<string>('')
+  const currentFormSeverity = ref<string>('Minor')
 
   function init(id: string, path: string, info?: any) {
     captureId.value = id
@@ -36,6 +41,9 @@ export const useOverlayStore = defineStore('overlay', () => {
     activeTool.value = null
     pendingAnnotation.value = null
     showIssueForm.value = false
+    currentFormTitle.value = ''
+    currentFormDescription.value = ''
+    currentFormSeverity.value = 'Minor'
   }
 
   function setTool(tool: 'marker' | 'rect' | 'arrow' | 'text' | 'blur' | 'freedraw' | 'highlight' | null) {
@@ -70,6 +78,9 @@ export const useOverlayStore = defineStore('overlay', () => {
     activeTool.value = null
     pendingAnnotation.value = null
     showIssueForm.value = false
+    currentFormTitle.value = ''
+    currentFormDescription.value = ''
+    currentFormSeverity.value = 'Minor'
   }
 
   function undo() {
@@ -199,6 +210,9 @@ export const useOverlayStore = defineStore('overlay', () => {
     nextMarkerNumber,
     pendingAnnotation,
     showIssueForm,
+    currentFormTitle,
+    currentFormDescription,
+    currentFormSeverity,
     init,
     setTool,
     addAnnotation,

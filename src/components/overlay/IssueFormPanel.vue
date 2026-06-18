@@ -160,11 +160,20 @@ const activeToolLabel = computed(() => {
 const isFormValid = ref(false)
 const formRef = ref<any>(null)
 
-// Form Fields
-const title = ref('')
+// Form Fields bound to store
+const title = computed({
+  get: () => overlayStore.currentFormTitle,
+  set: (val) => { overlayStore.currentFormTitle = val }
+})
+const description = computed({
+  get: () => overlayStore.currentFormDescription,
+  set: (val) => { overlayStore.currentFormDescription = val }
+})
+const severity = computed({
+  get: () => overlayStore.currentFormSeverity,
+  set: (val) => { overlayStore.currentFormSeverity = val }
+})
 const issueType = ref('Bug')
-const severity = ref('Minor')
-const description = ref('')
 const selectedTags = ref<string[]>([])
 
 const issueTypes = ['Bug', 'UI', 'UX', 'Suggestion', 'Requirement', 'Question']
@@ -183,10 +192,10 @@ const imePrimerRef = ref<HTMLTextAreaElement | null>(null)
 // Reset form values when the drawer is opened
 watch(() => overlayStore.showIssueForm, (visible) => {
   if (visible) {
-    title.value = ''
+    overlayStore.currentFormTitle = ''
+    overlayStore.currentFormDescription = ''
+    overlayStore.currentFormSeverity = 'Minor'
     issueType.value = 'Bug'
-    severity.value = 'Minor'
-    description.value = ''
     selectedTags.value = []
     tagStore.loadTags()
     if (formRef.value) {
@@ -226,10 +235,10 @@ const handleSave = async () => {
 
     // Attach issue metadata to the annotation
     overlayStore.pendingAnnotation.issue = {
-      title: title.value,
+      title: overlayStore.currentFormTitle,
       issueType: issueType.value,
-      severity: severity.value,
-      description: description.value,
+      severity: overlayStore.currentFormSeverity,
+      description: overlayStore.currentFormDescription,
       tags: tagNames
     }
     
@@ -251,9 +260,9 @@ const handleCancel = () => {
 const handleCopy = () => {
   if (formRef.value && !isFormValid.value) return
   emit('copy', {
-    title: title.value,
-    description: description.value,
-    severity: severity.value
+    title: overlayStore.currentFormTitle,
+    description: overlayStore.currentFormDescription,
+    severity: overlayStore.currentFormSeverity
   })
 }
 </script>
