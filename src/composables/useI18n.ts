@@ -128,7 +128,16 @@ const translations: Record<string, any> = {
       noDescription: 'No description provided.',
       failedLoad: 'Failed to load issue',
       noIssuesFound: 'No Issues Found',
-      noIssuesFilterSub: 'No issues match the active filter criteria or there are no issues recorded in this session.'
+      noIssuesFilterSub: 'No issues match the active filter criteria or there are no issues recorded in this session.',
+      annotatedScreenshot: 'Annotated Screenshot',
+      issueCrop: 'Issue Crop (Zoomed View)',
+      noCropImage: 'No crop image generated',
+      copyImage: 'Copy Image',
+      copyImageSuccess: 'Copied annotated image with details to clipboard!',
+      copyImageError: 'Failed to copy image to clipboard',
+      issueMetadata: 'Issue Details',
+      updatedOn: 'Updated',
+      colorBadge: 'Color Badge'
     },
     exportDialog: {
       exportCenter: 'Export Center',
@@ -443,7 +452,16 @@ const translations: Record<string, any> = {
       noDescription: 'Chưa có mô tả chi tiết.',
       failedLoad: 'Không thể tải thông tin lỗi',
       noIssuesFound: 'Không tìm thấy lỗi nào',
-      noIssuesFilterSub: 'Không có lỗi nào khớp với điều kiện lọc hoặc chưa có lỗi nào được ghi nhận trong session này.'
+      noIssuesFilterSub: 'Không có lỗi nào khớp với điều kiện lọc hoặc chưa có lỗi nào được ghi nhận trong session này.',
+      annotatedScreenshot: 'Ảnh chụp có ghi chú',
+      issueCrop: 'Ảnh cắt vùng lỗi (Cận cảnh)',
+      noCropImage: 'Không có ảnh cắt lỗi',
+      copyImage: 'Sao chép Ảnh',
+      copyImageSuccess: 'Đã sao chép ảnh kèm thông tin lỗi vào bộ nhớ tạm!',
+      copyImageError: 'Không thể sao chép ảnh vào bộ nhớ tạm',
+      issueMetadata: 'Thông tin Lỗi',
+      updatedOn: 'Cập nhật',
+      colorBadge: 'Màu sắc ghim'
     },
     exportDialog: {
       exportCenter: 'Trung tâm Xuất dữ liệu',
