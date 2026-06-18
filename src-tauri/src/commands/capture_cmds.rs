@@ -146,7 +146,7 @@ pub async fn open_overlay(
         .background_color(Color(18, 18, 18, 255))
         .initialization_script(&init_script)
         .always_on_top(true)
-        .skip_taskbar(true)
+        .skip_taskbar(false)
         .focused(true)
         .visible(true)
         .position(logical_x, logical_y)
