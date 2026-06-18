@@ -494,10 +494,23 @@ const handleGlobalCopy = () => {
       title: overlayStore.currentFormTitle,
       description: overlayStore.currentFormDescription,
       severity: overlayStore.currentFormSeverity,
-      markerNumber: overlayStore.nextMarkerNumber
+      markerNumber: overlayStore.pendingAnnotation?.number || overlayStore.nextMarkerNumber
     })
   } else {
-    copyAnnotatedImage()
+    // Find the last saved annotation with issue metadata to copy with
+    const lastIssueAnn = [...overlayStore.annotations]
+      .reverse()
+      .find(ann => ann.issue)
+    if (lastIssueAnn && lastIssueAnn.issue) {
+      copyAnnotatedImage({
+        title: lastIssueAnn.issue.title,
+        description: lastIssueAnn.issue.description,
+        severity: lastIssueAnn.issue.severity,
+        markerNumber: lastIssueAnn.number
+      })
+    } else {
+      copyAnnotatedImage()
+    }
   }
 }
 
@@ -506,7 +519,7 @@ const handleIssueCopy = (payload: { title: string; description: string; severity
     title: payload.title,
     description: payload.description,
     severity: payload.severity,
-    markerNumber: overlayStore.nextMarkerNumber
+    markerNumber: overlayStore.pendingAnnotation?.number || overlayStore.nextMarkerNumber
   })
 }
 
