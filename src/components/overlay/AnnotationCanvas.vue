@@ -233,6 +233,8 @@ defineExpose({
   outline: none;
   min-width: 150px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  user-select: text !important;
+  -webkit-user-select: text !important;
 }
 
 /* Custom Context Menu */

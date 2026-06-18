@@ -231,6 +231,8 @@ const handleCopy = () => {
   display: flex;
   flex-direction: column;
   height: 100vh;
+  user-select: text !important;
+  -webkit-user-select: text !important;
 }
 
 .panel-header {
