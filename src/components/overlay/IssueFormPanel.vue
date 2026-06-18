@@ -9,6 +9,12 @@
     :width="340"
     class="issue-form-panel"
   >
+    <!-- Hidden textarea to force initialize TSF/IME context on Windows WebView2 -->
+    <textarea
+      ref="imePrimerRef"
+      style="position: absolute; opacity: 0; pointer-events: none; width: 1px; height: 1px; left: -9999px;"
+    ></textarea>
+
     <div class="panel-header">
       <h3 class="text-h6 font-weight-bold">
         {{ t('overlay.issueAnnotation', 'Issue Annotation') }} #{{ nextMarkerNumber }}
@@ -30,6 +36,11 @@
         density="comfortable"
         :rules="[v => !!v || t('overlay.titleRequired', 'Title is required')]"
         required
+        lang="vi"
+        autocorrect="off"
+        autocapitalize="off"
+        @compositionstart="onCompositionStart"
+        @compositionend="onCompositionEnd"
       ></v-text-field>
 
       <!-- Type -->
@@ -60,6 +71,11 @@
         rows="4"
         max-rows="6"
         auto-grow
+        lang="vi"
+        autocorrect="off"
+        autocapitalize="off"
+        @compositionstart="onCompositionStart"
+        @compositionend="onCompositionEnd"
       ></v-textarea>
 
       <!-- Tags -->
@@ -76,12 +92,13 @@
       ></v-combobox>
     </v-form>
 
-    <div class="panel-footer d-flex flex-column gap-2">
-      <div class="d-flex gap-2 w-100">
+    <div class="panel-footer">
+      <div class="button-row">
         <v-btn
           color="secondary"
           variant="outlined"
           class="flex-grow-1 text-none"
+          @mousedown.prevent
           @click="handleCancel"
         >
           {{ t('overlay.discard') }}
@@ -91,6 +108,7 @@
           variant="flat"
           class="flex-grow-1 text-none"
           :disabled="!isFormValid"
+          @mousedown.prevent
           @click="handleSave"
         >
           {{ t('overlay.saveIssue') }}
@@ -102,6 +120,7 @@
         class="w-100 text-none"
         prepend-icon="mdi-content-copy"
         :disabled="!isFormValid"
+        @mousedown.prevent
         @click="handleCopy"
       >
         {{ t('issueDetail.copyImage') }}
@@ -111,7 +130,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, nextTick } from 'vue'
 import { useOverlayStore } from '@/stores/overlayStore'
 import { useTagStore } from '@/stores/tagStore'
 import { useI18n } from '@/composables/useI18n'
@@ -151,6 +170,16 @@ const selectedTags = ref<string[]>([])
 const issueTypes = ['Bug', 'UI', 'UX', 'Suggestion', 'Requirement', 'Question']
 const severities = ['Critical', 'Major', 'Minor', 'Info']
 
+const isComposing = ref(false)
+const onCompositionStart = () => {
+  isComposing.value = true
+}
+const onCompositionEnd = () => {
+  isComposing.value = false
+}
+
+const imePrimerRef = ref<HTMLTextAreaElement | null>(null)
+
 // Reset form values when the drawer is opened
 watch(() => overlayStore.showIssueForm, (visible) => {
   if (visible) {
@@ -163,6 +192,12 @@ watch(() => overlayStore.showIssueForm, (visible) => {
     if (formRef.value) {
       formRef.value.resetValidation()
     }
+    nextTick(() => {
+      if (imePrimerRef.value) {
+        imePrimerRef.value.focus()
+        imePrimerRef.value.blur()
+      }
+    })
   }
 })
 
@@ -251,8 +286,15 @@ const handleCopy = () => {
 .panel-footer {
   padding: 16px;
   display: flex;
-  gap: 12px;
+  flex-direction: column;
+  gap: 12px !important;
   border-top: 1px solid rgba(255, 255, 255, 0.08);
   background: #151821;
+}
+
+.button-row {
+  display: flex;
+  gap: 12px !important;
+  width: 100%;
 }
 </style>

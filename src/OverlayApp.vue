@@ -130,12 +130,26 @@ const handleScreenshotError = async () => {
   await revealOverlay()
 }
 
+const isDocumentComposing = ref(false)
+
+const onCompositionStart = () => {
+  isDocumentComposing.value = true
+}
+
+const onCompositionEnd = () => {
+  isDocumentComposing.value = false
+}
+
 const handleKeyDown = (e: KeyboardEvent) => {
-  // Ignore shortcuts when typing in inputs/textareas/contenteditable elements
+  // Ignore shortcuts when typing in inputs/textareas/contenteditable elements or composing IME
+  const target = e.target as HTMLElement
   if (
-    e.target instanceof HTMLInputElement ||
-    e.target instanceof HTMLTextAreaElement ||
-    (e.target as HTMLElement)?.isContentEditable
+    isDocumentComposing.value ||
+    target instanceof HTMLInputElement ||
+    target instanceof HTMLTextAreaElement ||
+    target?.tagName === 'INPUT' ||
+    target?.tagName === 'TEXTAREA' ||
+    target?.isContentEditable
   ) {
     return
   }
@@ -464,12 +478,16 @@ onMounted(async () => {
 
   // Keyboard shortcut to cancel
   window.addEventListener('keydown', handleKeyDown)
+  document.addEventListener('compositionstart', onCompositionStart)
+  document.addEventListener('compositionend', onCompositionEnd)
 })
 
 onUnmounted(() => {
   if (unlistenInit) unlistenInit()
   if (revealFallbackTimer) window.clearTimeout(revealFallbackTimer)
   window.removeEventListener('keydown', handleKeyDown)
+  document.removeEventListener('compositionstart', onCompositionStart)
+  document.removeEventListener('compositionend', onCompositionEnd)
   overlayStore.reset()
 })
 </script>
@@ -534,7 +552,6 @@ body {
   background: transparent;
   margin: 0;
   padding: 0;
-  user-select: none;
 }
 
 .screenshot-wrapper {
@@ -545,6 +562,8 @@ body {
   height: 100%;
   z-index: 1;
   background: transparent;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .loading-placeholder {
