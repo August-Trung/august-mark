@@ -138,12 +138,12 @@ pub async fn open_overlay(
     #[cfg(not(debug_assertions))]
     let url = WebviewUrl::App("overlay.html".into());
 
-    // Build transparent overlay window and inject init_script
+    // Build opaque overlay window to ensure IME (Vietnamese typing) works properly
     let builder = WebviewWindowBuilder::new(&app, overlay_label, url)
         .title("August Mark Overlay")
         .decorations(false)
-        .transparent(true)
-        .background_color(Color(0, 0, 0, 0))
+        .transparent(false)
+        .background_color(Color(18, 18, 18, 255))
         .initialization_script(&init_script)
         .always_on_top(true)
         .skip_taskbar(true)
